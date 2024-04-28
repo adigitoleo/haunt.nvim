@@ -1,0 +1,183 @@
+*haunt*	Floating windows for terminals, man pages and help buffers
+					      .-.
+					     ( O )
+					  /\_.' '._/\
+		 |_   _ _ _  _ _ __  |_   |         |
+		   \/ ,` ! ,  ! ,  \  _|   \       /
+		_| !\__._.\_._|_. _!\__.    \    /`
+					  (__)  /
+					  `.__.'
+
+		https://git.sr.ht/~adigitoleo/haunt.nvim
+
+		haunt (noun):
+		  a place frequented by a specified person or group of people
+
+==============================================================================
+INTRODUCTION						*haunt-introduction*
+
+This plugin provides the commands |:HauntTerm|, |:HauntHelp| and |:HauntMan|
+to open terminals, man pages and help buffers in floating windows (see
+|api-floatwin|). Multiple floating terminals with distinct states can be
+hidden during long-running terminal jobs and later restored to the floating
+window view. By contrast, only one floating man page and help buffer are
+supported (per |tabpage|). When these are closed, they will not be restored;
+simply pass the same argument to |:HauntHelp| or |:HauntMan| instead. The
+plugin requires NeoVim, and is know to work on versions 0.9.5+.
+
+Bug fixes and feature requests are welcome at my public inbox: >
+
+	https://lists.sr.ht/~adigitoleo/public-inbox
+
+Patches should be applicable to the `dev` branch. See |haunt-bugs| for a
+list of current known issues that are most in need of attention.
+
+
+==============================================================================
+USAGE								*haunt-usage*
+
+Once the plugin files are on your 'packpath', load the plugin with >
+
+	:lua require('haunt')
+
+in your `init.vim` file or simply >
+
+	require('haunt')
+
+in `init.lua`. Default options are applied automatically, but can be
+configured by passing a configuration table to the `setup` function, e.g. >
+
+	require('haunt').setup{ window = { show_title = false } }
+
+Configuration options are described in |haunt-config|.
+
+
+==============================================================================
+CONFIGURATION					*haunt-config* *haunt.setup*
+
+The following configuration options are supported for haunt.
+Any omitted values will be set to their indicated defaults.
+
+Lua configuration example~
+>
+	require('haunt').setup{
+		window = {
+			width_frac = 0.7,
+			height_frac = 0.7,
+			winblend = 50,
+			title_pos = "center",
+		},
+	}
+
+------------------------------------------------------------------------------
+						*haunt.setup.define_commands*
+
+This boolean option can be set to false to disable the default command
+definitions for |:HauntTerm|, |:HauntHelp| and |:HauntMan|. It is possible to
+use alternative command names by manually passing the |haunt-functions| to
+|nvim_create_user_command|.
+
+------------------------------------------------------------------------------
+							*haunt.setup.window*
+
+This option controls the appearance of the floating window. It is a table with
+the following keys
+
+	key~		value~		description~
+	----------------------------------------------------------------------
+	width_frac	number		fraction of |'columns'| used for the
+					floating window width (default: `0.8`)
+	----------------------------------------------------------------------
+	height_frac	number		fraction of |'lines'| used for the
+					floating window height (default: `0.8`)
+	----------------------------------------------------------------------
+	winblend	integer		percent transparency of the floating
+					window, see |'winblend'| (default: `25`)
+	----------------------------------------------------------------------
+	border		string or	border style for the floating window
+			array		see |nvim_open_win| (default: `"single"`)
+	----------------------------------------------------------------------
+	show_title	boolean		toggle display of titles in the
+					floating window border (default: `true`)
+	----------------------------------------------------------------------
+	title_pos	string		position of the title, see
+					|nvim_open_win| (default: `"left"`)
+	----------------------------------------------------------------------
+	zindex		integer		"priority" of the floating window,
+					see |api-win_config| (default: `11`)
+
+
+==============================================================================
+FUNCTIONS					*haunt-functions* *haunt-api*
+
+This plugin exposes a few functions to the NeoVim Lua namespace which can be
+used in custom command definitions or key bindings. They are listed in the
+table below.
+
+	function~		description~
+	----------------------------------------------------------------------
+	`haunt_term({*opts})`	open/focus floating terminal; accepts single
+				argument which is a table containing the keys
+				specified in |nvim_create_user_command| (see
+				the `{command}` argument)
+	`haunt_help({*opts})`	open floating help buffer; signature is
+				identical to `haunt_term`
+	`haunt_man({*opts})`	open floating man page buffer; signature is
+				identical to `haunt_term`
+	`haunt_ls({*opts})`	show the current mapping of floating terminal
+				titles to buffer numbers
+
+
+==============================================================================
+COMMANDS						*haunt-commands*
+
+This plugin defines a few commands, unless |haunt.setup.define_commands| is
+`false`. They are specified below.
+
+------------------------------------------------------------------------------
+								*:HauntTerm*
+
+This command launches or restores a floating terminal. Without arguments,
+launches an interactive |'shell'|. If the first argument is `-t`, then the
+second argument specifies the floating window title. Otherwise, the first
+argument is used as the title. Each floating terminal must have a unique
+title. The arguments specify either (1) the external command to be run, and
+its command line arguments or (2) the buffer number of an existing terminal
+buffer (in this case, setting an explicit title with `-t <title>` is
+required). Tab-completion via |command-complete| is set to `shellcmd`.
+
+------------------------------------------------------------------------------
+								*:HauntHelp*
+
+This command launches a floating help buffer. The optional argument specifies
+the help tag to be opened. Otherwise, the word under the cursor is used as the
+help tag. Tab-completion via |command-complete| is set to `help` (the list of
+all help tags).
+
+------------------------------------------------------------------------------
+								*:HauntMan*
+
+This command launches a floating man page, and relies on |man.lua|. The
+optional argument specifies the man page to be opened. Otherwise, the word
+under the cursor is used as the man page query. Tab-completion via
+|command-complete| is set to a thin wrapper of `require("man").man_complete`.
+
+------------------------------------------------------------------------------
+								*:HauntLs*
+
+Shows the current mapping of floating terminal titles to buffer numbers. This
+does not list all loaded terminal buffers, unlike `:ls!`. The mapping may be
+many-to-one if the title for a floating terminal was updated. In this case,
+using either title with `:HauntTerm -t <title>` will restore the same buffer.
+
+
+==============================================================================
+BUGS								*haunt-bugs*
+
+The pseudo-public interface `vim.t.HauntState.termbufs` retains invalid buffer
+numbers if the buffers were originally non-floating. This occurs because we
+are not able to set the `on_exit` method for such buffers to have them clean
+up after themselves. We may want to consider workarounds with autocommands
+that perform a manual sweep of that lua table.
+
+vim:tw=78:ts=8:noet:ft=help:norl:
