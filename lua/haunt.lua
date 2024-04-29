@@ -227,13 +227,19 @@ function haunt_help(opts)
     local arg = fn.expand("<cword>")
     if vim.tbl_count(opts.fargs) > 0 then arg = opts.fargs[1] end
     state.buf, state.win = floating(state.buf, state.win, "help", "help", "help")
-    local cmdparts = {
+    local cmdparts = {}
+    if opts.bang then
+        table.insert(cmdparts, "try|help! ")
+    else
+        table.insert(cmdparts, "try|help ")
+    end
+    cmdparts = vim.tbl_extend("force", cmdparts, {
         opts.bang and "try|help " or "try|help! ",
         arg,
         "|catch /^Vim(help):E149/|call nvim_win_close(",
         state.win,
         ", v:false)|echoerr v:exception|endtry",
-    }
+    })
     vim.cmd(table.concat(cmdparts))
     api.nvim_buf_set_option(state.buf, "filetype", "help") -- Set ft again to redraw conceal formatting.
     vim.t.HauntState = state
