@@ -19,6 +19,7 @@ Haunt.config = {
 Haunt.state = {    -- Local to a tabpage
     buf = -1,      -- ID of the buffer currently displayed in the floating window
     win = -1,      -- ID of the floating window
+    title = "",    -- Most recent title of the floating window
     termbufs = {}, -- maps known terminal 'titles' to their buffer IDs
 }
 
@@ -62,6 +63,35 @@ local function validate(key, value, section)
     return value
 end
 
+-- (Re)draw the floating window.
+local function draw(win, buf, title)
+    local wc = vim.o.columns
+    local wl = vim.o.lines
+    local width = math.ceil(wc * Haunt.config.window.width_frac)
+    local height = math.ceil(wl * Haunt.config.window.height_frac - 4)
+    local config = {
+        border = Haunt.config.window.border,
+        relative = "editor",
+        style = "minimal",
+        width = width,
+        height = height,
+        col = math.ceil((wc - width) * 0.5),
+        row = math.ceil((wl - height) * 0.5 - 1),
+        zindex = Haunt.config.window.zindex,
+    }
+    if title ~= nil then
+        config.title = Haunt.config.window.show_title and "[" .. title .. "]" or nil
+        config.title_pos = Haunt.config.window.title_pos
+    end
+    if api.nvim_buf_is_valid(vim.t.HauntState.buf) and api.nvim_win_is_valid(vim.t.HauntState.win) then
+        api.nvim_win_set_config(win, config)
+    else
+        win = api.nvim_open_win(buf, true, config)
+    end
+    api.nvim_win_set_option(win, "winblend", Haunt.config.window.winblend)
+    return win
+end
+
 -- Setup function to allow and validate user configuration.
 function Haunt.setup(config)
     Haunt.close()
@@ -84,10 +114,6 @@ local function floating(buf, win, bt, ft, title)
     -- bt: desired buftype
     -- ft: desired filetype
     -- title: title to be displayed in the window border
-    local wc = vim.o.columns
-    local wl = vim.o.lines
-    local width = math.ceil(wc * 0.8)
-    local height = math.ceil(wl * 0.8 - 4)
     if not api.nvim_buf_is_valid(buf) then
         buf = api.nvim_create_buf(true, false)
     end
@@ -95,20 +121,7 @@ local function floating(buf, win, bt, ft, title)
         api.nvim_buf_set_option(buf, "buftype", bt)
         api.nvim_buf_set_option(buf, "filetype", ft)
     end
-    -- Need to recreate the window to update its title.
-    if api.nvim_win_is_valid(win) then api.nvim_win_close(win, false) end
-    win = api.nvim_open_win(buf, true, {
-        border = "single",
-        relative = "editor",
-        style = "minimal",
-        width = width,
-        height = height,
-        col = math.ceil((wc - width) * 0.5),
-        row = math.ceil((wl - height) * 0.5 - 1),
-        title = Haunt.config.window.show_title and title or nil,
-        title_pos = Haunt.config.window.title_pos,
-    })
-    api.nvim_win_set_option(win, "winblend", Haunt.config.window.winblend)
+    win = draw(win, buf, title)
     api.nvim_set_current_win(win)
     api.nvim_set_current_buf(buf)
     return buf, win
@@ -119,11 +132,18 @@ local function lock_to_win(buf, win)
     api.nvim_create_autocmd({ "BufWinLeave" },
         {
             buffer = buf,
-            callback = function(ev)
-                vim.schedule(function()
-                    if api.nvim_win_is_valid(win) then api.nvim_set_current_buf(ev.buf) end
-                end)
-            end
+            callback = vim.schedule_wrap(function(ev)
+                if api.nvim_win_is_valid(win) then api.nvim_set_current_buf(ev.buf) end
+            end)
+        })
+    api.nvim_create_autocmd({ "VimResized" },
+        {
+            buffer = buf,
+            callback = vim.schedule_wrap(function(ev)
+                if api.nvim_win_is_valid(vim.t.HauntState.win) and api.nvim_buf_is_valid(ev.buf) then
+                    draw(vim.t.HauntState.win, ev.buf)
+                end
+            end)
         })
 end
 
@@ -154,7 +174,7 @@ local function is_terminal_buf(maybe_buf_number)
     return pcall(function() api.nvim_buf_get_var(maybe_buf_number, "term_title") end)
 end
 
-function haunt_term(opts)
+function Haunt.haunt_term(opts)
     local state = get_state()
     local title = nil
     local cmd = { vim.o.shell }
@@ -218,10 +238,11 @@ function haunt_term(opts)
         state.termbufs[title] = termbuf
     end
     state.buf = termbuf
+    state.title = title
     set_state(state)
 end
 
-function haunt_ls(opts)
+function Haunt.haunt_ls(opts)
     if opts.bang then return end -- TODO: Use bang to also show non-haunt terminal buffers?
     local terminals = {}
     if vim.t.HauntState ~= nil then
@@ -235,7 +256,7 @@ function haunt_ls(opts)
     vim.print(vim.inspect(terminals))
 end
 
-function haunt_help(opts)
+function Haunt.haunt_help(opts)
     local state = get_state()
     local arg = fn.expand("<cword>")
     if vim.tbl_count(opts.fargs) > 0 then arg = opts.fargs[1] end
@@ -255,10 +276,11 @@ function haunt_help(opts)
     })
     vim.cmd(table.concat(cmdparts))
     api.nvim_buf_set_option(state.buf, "filetype", "help") -- Set ft again to redraw conceal formatting.
+    state.title = "help"
     set_state(state)
 end
 
-function haunt_man(opts)
+function Haunt.haunt_man(opts)
     local state = get_state()
     local arg = fn.expand("<cword>")
     if vim.tbl_count(opts.fargs) > 0 then arg = opts.fargs[1] end
@@ -276,20 +298,21 @@ function haunt_man(opts)
         }
     end
     vim.cmd(table.concat(cmdparts))
+    state.title = "man"
     set_state(state)
 end
 
 if Haunt.config.define_commands then
-    command("HauntTerm", haunt_term,
+    command("HauntTerm", Haunt.haunt_term,
         {
             nargs = "*",
             complete = "shellcmd",
             desc =
             "Create or restore floating terminal, optionally setting a title or running a command"
         })
-    command("HauntLs", haunt_ls,
+    command("HauntLs", Haunt.haunt_ls,
         { nargs = 0, desc = "Show mapping of floating terminal titles -> buffer numbers" })
-    command("HauntHelp", haunt_help,
+    command("HauntHelp", Haunt.haunt_help,
         {
             nargs = "?",
             complete = "help",
@@ -297,7 +320,7 @@ if Haunt.config.define_commands then
             desc =
             "Open neovim help of argument or word under cursor in floating window"
         })
-    command("HauntMan", haunt_man, {
+    command("HauntMan", Haunt.haunt_man, {
         nargs = "?",
         bang = true,
         complete = function(arg_lead, cmdline, cursor_pos)
