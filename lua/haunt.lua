@@ -210,7 +210,9 @@ function haunt_term(opts)
                     _state.termbufs[title] = nil
                     vim.t.HauntState = _state
                 end
-                api.nvim_input("<Cr>")
+                if cmd[1] == vim.o.shell then
+                    api.nvim_input("<Cr>")
+                end
             end
         })
         state.termbufs[title] = termbuf
