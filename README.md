@@ -15,3 +15,34 @@ can load packages if they are added to your 'packpath'.
 Available commands and options are described in `:help overview`.
 
 Please send patches/queries to my [public inbox](https://lists.sr.ht/~adigitoleo/public-inbox).
+
+### Examples
+
+Open the documentation for this plugin in a floating window:
+
+    :HauntHelp haunt
+
+Open a floating terminal called "scratch", run command, close it, and restore:
+
+    :HauntTerm -t scratch
+    :startinsert
+    echo "scratch"<Cr>
+    <C-\><C-n>
+    :quit
+    :HauntTerm -t scratch
+
+Switch between two different interactive Python sessions:
+
+    :HauntTerm -t py1 python
+    :startinsert
+    print("py1")<Cr>
+    <C-\><C-n>
+    :HauntTerm -t py2 python
+    :startinsert
+    print("py2")<Cr>
+    <C-\><C-n>
+    :HauntTerm -t py1
+
+Open the man page for `mandoc(1)` in a floating window:
+
+    :HauntMan mandoc
