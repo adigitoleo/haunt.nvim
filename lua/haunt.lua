@@ -109,7 +109,13 @@ local function floating(buf, win, bt, ft, title)
         title_pos = Haunt.config.window.title_pos,
     })
     api.nvim_win_set_option(win, "winblend", Haunt.config.window.winblend)
-    -- Don't allow switching buffers of the floating window except via our API.
+    api.nvim_set_current_win(win)
+    api.nvim_set_current_buf(buf)
+    return buf, win
+end
+
+-- Don't allow switching buffers of the floating window except via our API.
+local function lock_to_win(buf, win)
     api.nvim_create_autocmd({ "BufWinLeave" },
         {
             buffer = buf,
@@ -119,25 +125,29 @@ local function floating(buf, win, bt, ft, title)
                 end)
             end
         })
-    api.nvim_set_current_win(win)
-    api.nvim_set_current_buf(buf)
-    return buf, win
 end
 
 local function get_state()
     local state = {}
     if vim.t.HauntState == nil then
-        vim.t.HauntState = state
         state = vim.tbl_deep_extend("force", state, Haunt.state)
+        vim.t.HauntState = state
     else
         state = vim.tbl_deep_extend("force", state, vim.t.HauntState)
     end
     return state
 end
 
+local function set_state(state)
+    vim.t.HauntState = state
+    if api.nvim_buf_is_valid(vim.t.HauntState.buf) and api.nvim_win_is_valid(vim.t.HauntState.win) then
+        lock_to_win(vim.t.HauntState.buf, vim.t.HauntState.win)
+    end
+end
+
 local function termfail(msg, state)
     warn(msg)
-    vim.t.HauntState = state
+    set_state(state)
 end
 
 local function is_terminal_buf(maybe_buf_number)
@@ -205,7 +215,8 @@ function haunt_term(opts)
         })
         state.termbufs[title] = termbuf
     end
-    vim.t.HauntState = state
+    state.buf = termbuf
+    set_state(state)
 end
 
 function haunt_ls(opts)
@@ -233,8 +244,8 @@ function haunt_help(opts)
     else
         table.insert(cmdparts, "try|help ")
     end
-    cmdparts = vim.tbl_extend("force", cmdparts, {
-        opts.bang and "try|help " or "try|help! ",
+    cmdparts = vim.tbl_extend("keep", cmdparts, {
+        nil, -- Replaced with try|help[!] from above.
         arg,
         "|catch /^Vim(help):E149/|call nvim_win_close(",
         state.win,
@@ -242,13 +253,13 @@ function haunt_help(opts)
     })
     vim.cmd(table.concat(cmdparts))
     api.nvim_buf_set_option(state.buf, "filetype", "help") -- Set ft again to redraw conceal formatting.
-    vim.t.HauntState = state
+    set_state(state)
 end
 
 function haunt_man(opts)
     local state = get_state()
     local arg = fn.expand("<cword>")
-    if vim.tbl_count(opts.fargs) > 0 then arg = opts.args[1] end
+    if vim.tbl_count(opts.fargs) > 0 then arg = opts.fargs[1] end
     state.buf, state.win = floating(state.buf, state.win, "nofile", "man", "man")
     local cmdparts = {}
     if opts.bang then
@@ -257,13 +268,13 @@ function haunt_man(opts)
         cmdparts = {
             "try|Man ",
             arg,
-            '|catch /^Vim:man.lua: "no manual entry for/|call nvim_win_close(',
+            '|catch /man.lua: /|call nvim_win_close(',
             state.win,
             ", v:false)|echoerr v:exception|endtry",
         }
     end
     vim.cmd(table.concat(cmdparts))
-    vim.t.HauntState = state
+    set_state(state)
 end
 
 if Haunt.config.define_commands then
