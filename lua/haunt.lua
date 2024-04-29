@@ -63,6 +63,21 @@ local function validate(key, value, section)
     return value
 end
 
+-- Setup function to allow and validate user configuration.
+function Haunt.setup(config)
+    Haunt.close()
+    for k, v in pairs(config) do
+        if type(v) == "table" then
+            for _k, _v in pairs(v) do
+                Haunt.config[k][_k] = validate(_k, _v, k)
+            end
+        else
+            Haunt.config[k] = validate(k, v)
+        end
+    end
+    return Haunt
+end
+
 -- (Re)draw the floating window.
 local function draw(win, buf, title)
     local wc = vim.o.columns
@@ -90,21 +105,6 @@ local function draw(win, buf, title)
     end
     api.nvim_win_set_option(win, "winblend", Haunt.config.window.winblend)
     return win
-end
-
--- Setup function to allow and validate user configuration.
-function Haunt.setup(config)
-    Haunt.close()
-    for k, v in pairs(config) do
-        if type(v) == "table" then
-            for _k, _v in pairs(v) do
-                Haunt.config[k][_k] = validate(_k, _v, k)
-            end
-        else
-            Haunt.config[k] = validate(k, v)
-        end
-    end
-    return Haunt
 end
 
 -- Open or focus floating window and set {buf|file}type.
@@ -174,7 +174,7 @@ local function is_terminal_buf(maybe_buf_number)
     return pcall(function() api.nvim_buf_get_var(maybe_buf_number, "term_title") end)
 end
 
-function Haunt.haunt_term(opts)
+function Haunt.term(opts)
     local state = get_state()
     local title = nil
     local cmd = { vim.o.shell }
@@ -242,7 +242,7 @@ function Haunt.haunt_term(opts)
     set_state(state)
 end
 
-function Haunt.haunt_ls(opts)
+function Haunt.ls(opts)
     if opts.bang then return end -- TODO: Use bang to also show non-haunt terminal buffers?
     local terminals = {}
     if vim.t.HauntState ~= nil then
@@ -256,7 +256,7 @@ function Haunt.haunt_ls(opts)
     vim.print(vim.inspect(terminals))
 end
 
-function Haunt.haunt_help(opts)
+function Haunt.help(opts)
     local state = get_state()
     local arg = fn.expand("<cword>")
     if vim.tbl_count(opts.fargs) > 0 then arg = opts.fargs[1] end
@@ -280,7 +280,7 @@ function Haunt.haunt_help(opts)
     set_state(state)
 end
 
-function Haunt.haunt_man(opts)
+function Haunt.man(opts)
     local state = get_state()
     local arg = fn.expand("<cword>")
     if vim.tbl_count(opts.fargs) > 0 then arg = opts.fargs[1] end
@@ -303,16 +303,16 @@ function Haunt.haunt_man(opts)
 end
 
 if Haunt.config.define_commands then
-    command("HauntTerm", Haunt.haunt_term,
+    command("HauntTerm", Haunt.term,
         {
             nargs = "*",
             complete = "shellcmd",
             desc =
             "Create or restore floating terminal, optionally setting a title or running a command"
         })
-    command("HauntLs", Haunt.haunt_ls,
+    command("HauntLs", Haunt.ls,
         { nargs = 0, desc = "Show mapping of floating terminal titles -> buffer numbers" })
-    command("HauntHelp", Haunt.haunt_help,
+    command("HauntHelp", Haunt.help,
         {
             nargs = "?",
             complete = "help",
@@ -320,7 +320,7 @@ if Haunt.config.define_commands then
             desc =
             "Open neovim help of argument or word under cursor in floating window"
         })
-    command("HauntMan", Haunt.haunt_man, {
+    command("HauntMan", Haunt.man, {
         nargs = "?",
         bang = true,
         complete = function(arg_lead, cmdline, cursor_pos)

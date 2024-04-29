@@ -110,22 +110,21 @@ the following keys
 ==============================================================================
 FUNCTIONS					*haunt-functions* *haunt-api*
 
-This plugin exposes a few functions to the NeoVim Lua namespace which can be
-used in custom command definitions or key bindings. They are listed in the
-table below.
+This plugin exposes a few functions via the `require("haunt")` Lua namespace
+which can be used in custom command definitions or key bindings. They are
+listed in the table below.
 
 	function~		description~
 	----------------------------------------------------------------------
-	`haunt_term({*opts})`	open/focus floating terminal; accepts single
-				argument which is a table containing the keys
-				specified in |nvim_create_user_command| (see
-				the `{command}` argument)
-	`haunt_help({*opts})`	open floating help buffer; signature is
-				identical to `haunt_term`
-	`haunt_man({*opts})`	open floating man page buffer; signature is
-				identical to `haunt_term`
-	`haunt_ls({*opts})`	show the current mapping of floating terminal
-				titles to buffer numbers
+	`term({*opts})`	open/focus floating terminal; accepts single argument
+			which is a table containing the keys specified in
+			|nvim_create_user_command| (see the `{command}` argument)
+	`help({*opts})`	open floating help buffer; signature is identical to
+			`haunt_term`
+	`man({*opts})`	open floating man page buffer; signature is identical
+			to `haunt_term`
+	`ls({*opts})`	show the current mapping of floating terminal titles
+			to buffer numbers
 
 
 ==============================================================================
@@ -173,6 +172,9 @@ using either title with `:HauntTerm -t <title>` will restore the same buffer.
 
 ==============================================================================
 BUGS								*haunt-bugs*
+
+For an unknown reason, `:HauntMan` windows are not being redrawd on |VimResized|.
+All other floating window types resize properly.
 
 The pseudo-public interface `vim.t.HauntState.termbufs` retains invalid buffer
 numbers if the buffers were originally non-floating. This occurs because we
