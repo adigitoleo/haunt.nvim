@@ -263,6 +263,7 @@ function Haunt.help(opts)
     local arg = fn.expand("<cword>")
     if vim.tbl_count(opts.fargs) > 0 then arg = opts.fargs[1] end
     state.buf, state.win = floating(state.buf, state.win, "help", "help", "help")
+    lock_to_win(state.buf, state.win)
     local cmdparts = {}
     if opts.bang then
         table.insert(cmdparts, "try|help! ")
@@ -287,6 +288,7 @@ function Haunt.man(opts)
     local arg = fn.expand("<cword>")
     if vim.tbl_count(opts.fargs) > 0 then arg = opts.fargs[1] end
     state.buf, state.win = floating(state.buf, state.win, "nofile", "man", "man")
+    lock_to_win(state.buf, state.win)
     local cmdparts = {}
     if opts.bang then
         cmdparts = { "Man!" }
