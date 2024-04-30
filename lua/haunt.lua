@@ -274,7 +274,7 @@ function Haunt.help(opts)
     lock_to_win(state.buf, state.win)
     local cmdparts = {}
     cmdparts = vim.tbl_extend("keep", cmdparts, {
-        "try|help",
+        "try|help ",
         arg,
         "|catch /^Vim(help):E149/|call nvim_win_close(",
         state.win,
