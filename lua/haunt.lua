@@ -134,8 +134,12 @@ local function lock_to_win(buf, win)
             buffer = buf,
             callback = vim.schedule_wrap(function(ev)
                 if api.nvim_win_is_valid(win) then api.nvim_set_current_buf(ev.buf) end
-                -- Set ft=help again to redraw conceal formatting.
-                if vim.o.buftype == "help" then api.nvim_buf_set_option(ev.buf, "filetype", "help") end
+                if vim.o.buftype == "help" then
+                    -- Set ft=help again to redraw conceal formatting.
+                    api.nvim_buf_set_option(ev.buf, "filetype", "help")
+                    -- Restore transparency.
+                    api.nvim_win_set_option(win, "winblend", Haunt.config.window.winblend)
+                end
             end)
         })
     api.nvim_create_autocmd({ "VimResized" },
