@@ -161,6 +161,8 @@ optional argument specifies the man page to be opened. Otherwise, the word
 under the cursor is used as the man page query. Tab-completion via
 |command-complete| is set to a thin wrapper of `require("man").man_complete`.
 
+The variant `:HauntMan!` renders the current buffer as a man page.
+
 ------------------------------------------------------------------------------
 								*:HauntLs*
 

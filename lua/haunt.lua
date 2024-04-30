@@ -333,7 +333,7 @@ if Haunt.config.define_commands then
                 return man.man_complete(arg_lead, cmdline, cursor_pos)
             end
         end,
-        desc = "Show man page of argument or word under cursor in floating window"
+        desc = "Show man page of argument (or current file if using !) or word under cursor in floating window"
     })
 end
 
