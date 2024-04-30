@@ -173,9 +173,6 @@ using either title with `:HauntTerm -t <title>` will restore the same buffer.
 ==============================================================================
 BUGS								*haunt-bugs*
 
-For an unknown reason, `:HauntMan` windows are not being redrawd on |VimResized|.
-All other floating window types resize properly.
-
 The pseudo-public interface `vim.t.HauntState.termbufs` retains invalid buffer
 numbers if the buffers were originally non-floating. This occurs because we
 are not able to set the `on_exit` method for such buffers to have them clean
