@@ -15,7 +15,7 @@ Commands like `:bnext`, `:bprevious`, `:b#` etc. are suppressed in this window.
 Install the plugin using your preferred plugin manager. Alternatively, NeoVim
 can load packages if they are added to your 'packpath'.
 
-Available commands and options are described in `:help overview`.
+Available commands and options are described in `:help haunt`.
 
 Please send patches/queries to my [public inbox](https://lists.sr.ht/~adigitoleo/public-inbox).
 
