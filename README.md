@@ -8,6 +8,9 @@ Floating windows for terminals, man pages and help buffers.
 This [NeoVim](https://neovim.io) plugin, written in Lua, offers alternative
 commands to open embedded terminals, man pages and help buffers in floating
 windows. Existing terminal buffers can also be opened in the floating window.
+Commands like `:bnext`, `:bprevious`, `:b#` etc. are suppressed in this window.
+
+![:HauntHelp screenshot](screenshot.png)
 
 Install the plugin using your preferred plugin manager. Alternatively, NeoVim
 can load packages if they are added to your 'packpath'.
