@@ -166,10 +166,12 @@ The variant `:HauntMan!` renders the current buffer as a man page.
 ------------------------------------------------------------------------------
 								*:HauntLs*
 
-Shows the current mapping of floating terminal titles to buffer numbers. This
-does not list all loaded terminal buffers, unlike `:ls!`. The mapping may be
-many-to-one if the title for a floating terminal was updated. In this case,
-using either title with `:HauntTerm -t <title>` will restore the same buffer.
+Shows the current mapping of floating terminal titles to buffer numbers. The
+mapping may be many-to-one if the title for a floating terminal was updated.
+In this case, using either title with `:HauntTerm -t <title>` will restore the
+same buffer.
+
+The variant `:HauntLs!` will instead list |b:term_title|s of all terminal buffers.
 
 
 ==============================================================================

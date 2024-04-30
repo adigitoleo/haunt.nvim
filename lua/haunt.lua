@@ -245,9 +245,17 @@ function Haunt.term(opts)
 end
 
 function Haunt.ls(opts)
-    if opts.bang then return end -- TODO: Use bang to also show non-haunt terminal buffers?
     local terminals = {}
-    if vim.t.HauntState ~= nil then
+    if opts.bang then
+        vim.tbl_map(function(v) terminals[fn.getbufvar("term_title")] = v end,
+            vim.tbl_filter(
+                function(v)
+                    if fn.getbufvar(v, "&buftype") == "terminal" then return v end
+                    return false
+                end, api.nvim_list_bufs()
+            )
+        )
+    elseif vim.t.HauntState ~= nil then
         for k, v in pairs(vim.t.HauntState.termbufs) do
             if api.nvim_buf_is_valid(v) then
                 terminals[k] = v
