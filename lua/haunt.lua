@@ -273,13 +273,8 @@ function Haunt.help(opts)
     state.buf, state.win = floating(state.buf, state.win, "help", "help", "help")
     lock_to_win(state.buf, state.win)
     local cmdparts = {}
-    if opts.bang then
-        table.insert(cmdparts, "try|help! ")
-    else
-        table.insert(cmdparts, "try|help ")
-    end
     cmdparts = vim.tbl_extend("keep", cmdparts, {
-        nil, -- Replaced with try|help[!] from above.
+        "try|help",
         arg,
         "|catch /^Vim(help):E149/|call nvim_win_close(",
         state.win,
@@ -319,18 +314,19 @@ if Haunt.config.define_commands then
         {
             nargs = "*",
             complete = "shellcmd",
-            desc =
-            "Create or restore floating terminal, optionally setting a title or running a command"
+            desc = "Create or restore floating terminal, optionally setting a title or running a command"
         })
     command("HauntLs", Haunt.ls,
-        { nargs = 0, desc = "Show mapping of floating terminal titles -> buffer numbers" })
+        {
+            nargs = 0,
+            bang = true,
+            desc = "Show mapping of floating (or all, if using !) terminal titles -> buffer numbers"
+        })
     command("HauntHelp", Haunt.help,
         {
             nargs = "?",
             complete = "help",
-            bang = true,
-            desc =
-            "Open neovim help of argument or word under cursor in floating window"
+            desc = "Open neovim help of argument or word under cursor in floating window"
         })
     command("HauntMan", Haunt.man, {
         nargs = "?",
