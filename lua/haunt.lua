@@ -65,7 +65,6 @@ end
 
 -- Setup function to allow and validate user configuration.
 function Haunt.setup(config)
-    Haunt.close()
     for k, v in pairs(config) do
         if type(v) == "table" then
             for _k, _v in pairs(v) do
