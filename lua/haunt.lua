@@ -250,7 +250,7 @@ end
 function Haunt.ls(opts)
     local terminals = {}
     if opts.bang then
-        vim.tbl_map(function(v) terminals[fn.getbufvar(v, "term_title")] = v end,
+        vim.tbl_map(function(v) terminals[api.nvim_buf_get_var(v, "term_title")] = v end,
             vim.tbl_filter(
                 function(v)
                     if fn.getbufvar(v, "&buftype") == "terminal" then return v end
