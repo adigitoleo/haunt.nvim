@@ -155,7 +155,7 @@ end
 local function get_state()
     local state = {}
     if vim.t.HauntState == nil then
-        state = vim.tbl_deep_extend("force", state, Haunt.state)
+        state = vim.deepcopy(Haunt.state)
         vim.t.HauntState = state
     else
         state = vim.tbl_deep_extend("force", state, vim.t.HauntState)
@@ -264,7 +264,7 @@ function Haunt.ls(opts)
                 terminals[k] = v
             end
         end
-        vim.t.HauntState = terminals -- Take the opportunity to clean up dead buffer refs.
+        vim.t.HauntState.termbufs = terminals -- Take the opportunity to clean up dead buffer refs.
     end
     vim.print(vim.inspect(terminals))
 end
