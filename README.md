@@ -1,4 +1,4 @@
-# haunt.nvim
+# 👻 haunt.nvim
 
 Floating windows for terminals, man pages and help buffers.
 
