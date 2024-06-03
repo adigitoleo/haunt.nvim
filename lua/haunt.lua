@@ -151,12 +151,12 @@ local function lock_to_win(buf, win)
                 end
             end)
         })
-    vim.t.HauntState.autocommands[buf] = { leave_autocommand, resized_autocommand }
+    vim.t.HauntState.autocommands[string.format("%d", buf)] = { leave_autocommand, resized_autocommand }
 end
 
 local function unlock(buf)
-    if vim.t.HauntState.autocommands[buf] ~= nil then
-        for _, id in pairs(vim.t.HauntState.autocommands[buf]) do
+    if vim.t.HauntState.autocommands[string.format("%d", buf)] ~= nil then
+        for _, id in pairs(vim.t.HauntState.autocommands[string.format("%d", buf)]) do
             api.nvim_del_autocmd(id)
         end
     end
