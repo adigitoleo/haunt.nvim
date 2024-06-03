@@ -154,12 +154,13 @@ local function lock_to_win(buf, win)
     vim.t.HauntState.autocommands[string.format("%d", buf)] = { leave_autocommand, resized_autocommand }
 end
 
-local function unlock(buf)
-    if vim.t.HauntState.autocommands[string.format("%d", buf)] ~= nil then
-        for _, id in pairs(vim.t.HauntState.autocommands[string.format("%d", buf)]) do
+local function unlock(state)
+    if state.autocommands[string.format("%d", state.buf)] ~= nil then
+        for _, id in pairs(vim.t.HauntState.autocommands[string.format("%d", state.buf)]) do
             api.nvim_del_autocmd(id)
         end
     end
+    vim.t.HauntState = state
 end
 
 local function get_state()
@@ -283,7 +284,7 @@ function Haunt.help(opts)
     local state = get_state()
     local arg = fn.expand("<cword>")
     if vim.tbl_count(opts.fargs) > 0 then arg = opts.fargs[1] end
-    unlock(state.buf)
+    unlock(state)
     state.buf, state.win = floating(state.buf, state.win, "help", "help", "help")
     -- lock_to_win(state.buf, state.win)
     local cmdparts = {}
@@ -304,7 +305,7 @@ function Haunt.man(opts)
     local state = get_state()
     local arg = fn.expand("<cword>")
     if vim.tbl_count(opts.fargs) > 0 then arg = opts.fargs end
-    unlock(state.buf)
+    unlock(state)
     state.buf, state.win = floating(state.buf, state.win, "nofile", "man", "man")
     -- lock_to_win(state.buf, state.win)
     local cmdparts = {}
