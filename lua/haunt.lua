@@ -128,7 +128,7 @@ end
 
 -- Don't allow switching buffers of the floating window except via our API.
 local function lock_to_win(buf, win)
-    local leave_autocommand = api.nvim_create_autocmd({ "BufWinLeave" },
+    api.nvim_create_autocmd({ "BufWinLeave" },
         {
             buffer = buf,
             callback = vim.schedule_wrap(function(ev)
@@ -143,7 +143,7 @@ local function lock_to_win(buf, win)
                 end
             end)
         })
-    local resized_autocommand = api.nvim_create_autocmd({ "VimResized" },
+    api.nvim_create_autocmd({ "VimResized" },
         {
             buffer = buf,
             callback = vim.schedule_wrap(function(ev)
@@ -276,7 +276,6 @@ function Haunt.help(opts)
     local arg = fn.expand("<cword>")
     if vim.tbl_count(opts.fargs) > 0 then arg = opts.fargs[1] end
     state.buf, state.win = floating(state.buf, state.win, "help", "help", "help")
-    lock_to_win(state.buf, state.win)
     local cmdparts = {}
     cmdparts = vim.tbl_extend("keep", cmdparts, {
         "try|help ",
@@ -296,7 +295,6 @@ function Haunt.man(opts)
     local arg = fn.expand("<cword>")
     if vim.tbl_count(opts.fargs) > 0 then arg = opts.fargs end
     state.buf, state.win = floating(state.buf, state.win, "nofile", "man", "man")
-    lock_to_win(state.buf, state.win)
     local cmdparts = {}
     if opts.bang then
         cmdparts = { "Man!" }
