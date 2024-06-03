@@ -132,7 +132,7 @@ local function lock_to_win(buf, win)
         {
             buffer = buf,
             callback = vim.schedule_wrap(function(ev)
-                if api.nvim_win_is_valid(win) then
+                if api.nvim_win_is_valid(win) and api.nvim_buf_is_valid(ev.buf) then
                     api.nvim_set_current_buf(ev.buf)
                     if vim.o.buftype == "help" then
                         -- Set ft=help again to redraw conceal formatting.
