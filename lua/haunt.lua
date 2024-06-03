@@ -133,12 +133,14 @@ local function lock_to_win(buf, win)
         {
             buffer = buf,
             callback = vim.schedule_wrap(function(ev)
-                if api.nvim_win_is_valid(win) then api.nvim_set_current_buf(ev.buf) end
-                if vim.o.buftype == "help" then
-                    -- Set ft=help again to redraw conceal formatting.
-                    api.nvim_set_option_value("filetype", "help", { buf = ev.buf })
-                    -- Restore transparency.
-                    api.nvim_set_option_value("winblend", Haunt.config.window.winblend, { win = win })
+                if api.nvim_win_is_valid(win) then
+                    api.nvim_set_current_buf(ev.buf)
+                    if vim.o.buftype == "help" then
+                        -- Set ft=help again to redraw conceal formatting.
+                        api.nvim_set_option_value("filetype", "help", { buf = ev.buf })
+                        -- Restore transparency.
+                        api.nvim_set_option_value("winblend", Haunt.config.window.winblend, { win = win })
+                    end
                 end
             end)
         })
