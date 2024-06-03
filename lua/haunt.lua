@@ -16,11 +16,12 @@ Haunt.config = {
     },
 }
 
-Haunt.state = {    -- Local to a tabpage
-    buf = -1,      -- ID of the buffer currently displayed in the floating window
-    win = -1,      -- ID of the floating window
-    title = "",    -- Most recent title of the floating window
-    termbufs = {}, -- maps known terminal 'titles' to their buffer IDs
+Haunt.state = {       -- Local to a tabpage
+    buf = -1,         -- ID of the buffer currently displayed in the floating window
+    win = -1,         -- ID of the floating window
+    title = "",       -- Most recent title of the floating window
+    termbufs = {},    -- maps known terminal 'titles' to their buffer IDs
+    autocommands = {} -- IDs of autocommands used for window locking
 }
 
 local function warn(msg) api.nvim_err_writeln("[haunt.nvim]: " .. msg) end
@@ -128,7 +129,7 @@ end
 
 -- Don't allow switching buffers of the floating window except via our API.
 local function lock_to_win(buf, win)
-    api.nvim_create_autocmd({ "BufWinLeave" },
+    local leave_autocommand = api.nvim_create_autocmd({ "BufWinLeave" },
         {
             buffer = buf,
             callback = vim.schedule_wrap(function(ev)
@@ -137,11 +138,11 @@ local function lock_to_win(buf, win)
                     -- Set ft=help again to redraw conceal formatting.
                     api.nvim_set_option_value("filetype", "help", { buf = ev.buf })
                     -- Restore transparency.
-                    api.nvim_set_option_value("winblend", Haunt.config.window.winblend, { win = fn.bufwinid(buf) })
+                    api.nvim_set_option_value("winblend", Haunt.config.window.winblend, { win = win })
                 end
             end)
         })
-    api.nvim_create_autocmd({ "VimResized" },
+    local resized_autocommand = api.nvim_create_autocmd({ "VimResized" },
         {
             buffer = buf,
             callback = vim.schedule_wrap(function(ev)
@@ -150,6 +151,13 @@ local function lock_to_win(buf, win)
                 end
             end)
         })
+    vim.t.Haunt.state.autocommands[buf] = { leave_autocommand, resized_autocommand }
+end
+
+local function unlock(buf)
+    for _, id in pairs(vim.t.HauntState.autocommands[buf]) do
+        api.nvim_del_autocmd(id)
+    end
 end
 
 local function get_state()
@@ -273,8 +281,9 @@ function Haunt.help(opts)
     local state = get_state()
     local arg = fn.expand("<cword>")
     if vim.tbl_count(opts.fargs) > 0 then arg = opts.fargs[1] end
+    unlock(state.buf)
     state.buf, state.win = floating(state.buf, state.win, "help", "help", "help")
-    lock_to_win(state.buf, state.win)
+    -- lock_to_win(state.buf, state.win)
     local cmdparts = {}
     cmdparts = vim.tbl_extend("keep", cmdparts, {
         "try|help ",
@@ -293,8 +302,9 @@ function Haunt.man(opts)
     local state = get_state()
     local arg = fn.expand("<cword>")
     if vim.tbl_count(opts.fargs) > 0 then arg = opts.fargs end
+    unlock(state.buf)
     state.buf, state.win = floating(state.buf, state.win, "nofile", "man", "man")
-    lock_to_win(state.buf, state.win)
+    -- lock_to_win(state.buf, state.win)
     local cmdparts = {}
     if opts.bang then
         cmdparts = { "Man!" }
