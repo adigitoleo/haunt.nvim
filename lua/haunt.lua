@@ -155,8 +155,10 @@ local function lock_to_win(buf, win)
 end
 
 local function unlock(buf)
-    for _, id in pairs(vim.t.HauntState.autocommands[buf]) do
-        api.nvim_del_autocmd(id)
+    if vim.t.HauntState.autocommands[buf] ~= nil then
+        for _, id in pairs(vim.t.HauntState.autocommands[buf]) do
+            api.nvim_del_autocmd(id)
+        end
     end
 end
 
