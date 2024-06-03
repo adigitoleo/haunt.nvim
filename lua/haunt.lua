@@ -137,7 +137,7 @@ local function lock_to_win(buf, win)
                     -- Set ft=help again to redraw conceal formatting.
                     api.nvim_set_option_value("filetype", "help", { buf = ev.buf })
                     -- Restore transparency.
-                    api.nvim_set_option_value("winblend", Haunt.config.window.winblend, { win = win })
+                    api.nvim_set_option_value("winblend", Haunt.config.window.winblend, { win = fn.bufwinid(buf) })
                 end
             end)
         })
