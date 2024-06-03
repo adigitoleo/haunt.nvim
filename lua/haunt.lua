@@ -21,7 +21,6 @@ Haunt.state = {       -- Local to a tabpage
     win = -1,         -- ID of the floating window
     title = "",       -- Most recent title of the floating window
     termbufs = {},    -- maps known terminal 'titles' to their buffer IDs
-    autocommands = {} -- IDs of autocommands used for window locking
 }
 
 local function warn(msg) api.nvim_err_writeln("[haunt.nvim]: " .. msg) end
@@ -153,16 +152,6 @@ local function lock_to_win(buf, win)
                 end
             end)
         })
-    vim.t.HauntState.autocommands[string.format("%d", buf)] = { leave_autocommand, resized_autocommand }
-end
-
-local function unlock(state)
-    if state.autocommands[string.format("%d", state.buf)] ~= nil then
-        for _, id in pairs(vim.t.HauntState.autocommands[string.format("%d", state.buf)]) do
-            api.nvim_del_autocmd(id)
-        end
-    end
-    vim.t.HauntState = state
 end
 
 local function get_state()
@@ -286,9 +275,8 @@ function Haunt.help(opts)
     local state = get_state()
     local arg = fn.expand("<cword>")
     if vim.tbl_count(opts.fargs) > 0 then arg = opts.fargs[1] end
-    unlock(state)
     state.buf, state.win = floating(state.buf, state.win, "help", "help", "help")
-    -- lock_to_win(state.buf, state.win)
+    lock_to_win(state.buf, state.win)
     local cmdparts = {}
     cmdparts = vim.tbl_extend("keep", cmdparts, {
         "try|help ",
@@ -307,9 +295,8 @@ function Haunt.man(opts)
     local state = get_state()
     local arg = fn.expand("<cword>")
     if vim.tbl_count(opts.fargs) > 0 then arg = opts.fargs end
-    unlock(state)
     state.buf, state.win = floating(state.buf, state.win, "nofile", "man", "man")
-    -- lock_to_win(state.buf, state.win)
+    lock_to_win(state.buf, state.win)
     local cmdparts = {}
     if opts.bang then
         cmdparts = { "Man!" }
