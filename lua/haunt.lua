@@ -151,7 +151,7 @@ local function lock_to_win(buf, win)
                 end
             end)
         })
-    vim.t.Haunt.state.autocommands[buf] = { leave_autocommand, resized_autocommand }
+    vim.t.HauntState.autocommands[buf] = { leave_autocommand, resized_autocommand }
 end
 
 local function unlock(buf)
