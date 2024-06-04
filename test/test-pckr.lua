@@ -8,6 +8,7 @@ opt.pp:prepend(session.root .. "/site")
 local pckr = tests.load("pckr")
 if pckr ~= nil then
     vim.cmd.packadd { args = { "haunt.nvim" } }
+    vim.cmd.helptags { args = { "ALL" } }
     local haunt = tests.load("haunt")
     if haunt ~= nil then tests.runtests(haunt) end
 end
