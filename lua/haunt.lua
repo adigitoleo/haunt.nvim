@@ -243,8 +243,9 @@ function Haunt.term(opts)
         create_new = true
     end
     termbuf, state.win = floating(termbuf, state.win, "terminal", "", title)
+    local job_id = nil
     if create_new then
-        fn.termopen(cmd, {
+        job_id = fn.termopen(cmd, {
             on_exit = function()
                 if vim.t.HauntState ~= nil then
                     local _state = vim.t.HauntState
@@ -261,6 +262,7 @@ function Haunt.term(opts)
     state.buf = termbuf
     state.title = title
     set_state(state)
+    return job_id
 end
 
 function Haunt.ls(opts)
