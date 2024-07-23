@@ -46,27 +46,35 @@ end
 
 -- Validate custom user config, fall back to defaults defined above.
 local function validate(key, value, section)
-    local cfg = Haunt.config
-    local option = key .. " = " .. value
+    local schema = Haunt.config
+    local got_type = type(value)
+    local option = key .. " = " .. tostring(value)
     if section then
-        option = table.concat({ section, key }, ".") .. " = " .. value
-        if section == "window" and cfg.window[key] ~= nil then
-            if (key == "width_frac" or key == "height_frac" or key == "winblend" or key == "zindex") and not type(value) == "number" then
+        option = table.concat({ section, key }, ".") .. " = " .. tostring(value)
+        if schema[section] == nil or schema[section][key] == nil then
+            warn("unrecognized config option " .. option)
+            return nil
+        elseif section == "window" then
+            if (key == "width_frac" or key == "height_frac" or key == "winblend" or key == "zindex") and got_type ~= "number" then
                 warn(option .. " must be a number")
-                return cfg[section][key]
-            elseif key == "show_title" and not type(value) == "boolean" then
+                return schema[section][key]
+            elseif key == "show_title" and got_type ~= "boolean" then
                 warn(option .. " must be a boolean")
-                return cfg[section][key]
+                return schema[section][key]
             elseif key == "title_pos" and not (value == "left" or value == "right" or value == "center" or value == nil) then
                 warn(option .. " must be one of: 'left', 'right', 'center' or nil")
-            elseif key == "border" and not type(key) == "string" then
-                warn(option .. " must be a string")
+                return schema[section][key]
+            elseif key == "border" and not (got_type == "string" or got_type == "table") then
+                warn(option .. " must be a string or array")
+                return schema[section][key]
             end
         end
-    elseif key == "define_commands" and not type(value) == "boolean" then
-        warn(option .. " must be a boolean")
-    else
+    elseif schema[key] == nil then
         warn("unrecognized config option " .. option)
+        return nil
+    elseif key == "define_commands" and got_type ~= "boolean" then
+        warn(option .. " must be a boolean")
+        return schema[key]
     end
     return value
 end
