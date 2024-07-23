@@ -1,0 +1,11 @@
+image: archlinux
+packages:
+  - neovim
+  - ripgrep
+  - fzf
+sources:
+  - https://git.sr.ht/~adigitoleo/haunt.nvim
+tasks:
+  - test: |
+      cd haunt.nvim
+      make test
