@@ -23,8 +23,16 @@ Haunt.state = {    -- Local to a tabpage
     termbufs = {}, -- maps known terminal 'titles' to their buffer IDs
 }
 
-local function warn(msg) api.nvim_err_writeln("[haunt.nvim]: " .. msg) end
+-- Use error(), which is blocking, instead of nvim_err_writeln(), which is not.
+-- This is used in the test suite and could be useful for debugging.
+Haunt._err_blocking = false
+
 local function is_executable(cmd) if fn.executable(cmd) > 0 then return true else return false end end
+local function warn(msg)
+    local erf = api.nvim_err_writeln
+    if Haunt._err_blocking then erf = error end
+    erf("[haunt.nvim]: " .. msg)
+end
 
 local function load(plugin) -- Load either local or third-party plugin.
     local has_plugin, out = pcall(require, plugin)
