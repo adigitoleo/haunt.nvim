@@ -15,9 +15,12 @@ Commands like `:bnext`, `:bprevious`, `:b#` etc. are suppressed in this window.
 Install the plugin using your preferred plugin manager. Alternatively, NeoVim
 can load packages if they are added to your 'packpath'.
 
-Available commands and options are described in `:help haunt`.
+Available commands and options are described in `:help haunt`
+(also `:HauntHelp haunt` if you allowed default command definitions).
 
 Please send patches/queries to my [public inbox](https://lists.sr.ht/~adigitoleo/public-inbox).
+Current issues and pending feature requests are listed on [my nvim-plugins tracker](https://todo.sr.ht/~adigitoleo/nvim-plugins).
+Notable difficulties and bugs without known fixes are listed in `:help haunt-bugs`.
 
 ### Examples
 
