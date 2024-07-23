@@ -302,7 +302,7 @@ function Haunt.help(opts)
         ", v:false)|echoerr v:exception|endtry",
     })
     -- Scheduled, because `nvim_win_close` requires waiting for released textlock.
-    vim.schedule(function() vim.cmd("'" .. table.concat(cmdparts) .. "'") end)
+    vim.schedule(function() vim.cmd(table.concat(cmdparts)) end)
     api.nvim_buf_set_option(state.buf, "filetype", "help") -- Set ft again to redraw conceal formatting.
     state.title = "help"
     set_state(state)
@@ -331,7 +331,7 @@ function Haunt.man(opts)
         }
     end
     -- Scheduled, because `nvim_win_close` requires waiting for released textlock.
-    vim.schedule(function() vim.cmd("'" .. table.concat(cmdparts) .. "'") end)
+    vim.schedule(function() vim.cmd(table.concat(cmdparts)) end)
     state.title = "man"
     set_state(state)
 end
