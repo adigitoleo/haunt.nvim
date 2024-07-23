@@ -200,7 +200,7 @@ function Haunt.term(opts)
     local title = nil
     local cmd = { vim.o.shell }
     local termbuf = -1
-    if opts.fargs[1] == "-t" then -- Pick up explicit titles set with -t <title>.
+    if (opts and opts.fargs[1] == "-t") then -- Pick up explicit titles set with -t <title>.
         table.remove(opts.fargs, 1)
         title = opts.fargs[1]
         if title ~= nil then
@@ -210,7 +210,7 @@ function Haunt.term(opts)
             return
         end
     end
-    if vim.tbl_count(opts.fargs) > 0 then cmd = opts.fargs end
+    if (opts and vim.tbl_count(opts.fargs) > 0) then cmd = opts.fargs end
     local maybe_buf_number = tonumber(cmd[1], 10) -- Allow opening existing terminal buffers by buffer number.
     if is_executable(cmd[1]) then
         if title == nil then title = cmd[1] end   -- Use the first arg (executable name) as the title by defualt.
@@ -265,7 +265,7 @@ end
 
 function Haunt.ls(opts)
     local terminals = {}
-    if opts.bang then
+    if (opts and opts.bang) then
         vim.tbl_map(function(v) terminals[api.nvim_buf_get_var(v, "term_title")] = v end,
             vim.tbl_filter(
                 function(v)
@@ -288,7 +288,7 @@ end
 function Haunt.help(opts)
     local state = get_state()
     local arg = fn.expand("<cword>")
-    if vim.tbl_count(opts.fargs) > 0 then arg = opts.fargs[1] end
+    if (opts and vim.tbl_count(opts.fargs) > 0) then arg = opts.fargs[1] end
     state.buf, state.win = floating(state.buf, state.win, "help", "help", "help")
     lock_to_win(state.buf, state.win)
     local cmdparts = {}
@@ -308,11 +308,15 @@ end
 function Haunt.man(opts)
     local state = get_state()
     local arg = fn.expand("<cword>")
-    if vim.tbl_count(opts.fargs) > 0 then arg = opts.fargs[1] end
+    if (opts and vim.tbl_count(opts.fargs) > 0) then arg = opts.fargs[1] end
+    if #arg <= 0 then
+        warn(":Man requires an argument")
+        return
+    end
     state.buf, state.win = floating(state.buf, state.win, "nofile", "man", "man")
     lock_to_win(state.buf, state.win)
     local cmdparts = {}
-    if opts.bang then
+    if (opts and opts.bang) then
         cmdparts = { "Man!" }
     else
         cmdparts = {
