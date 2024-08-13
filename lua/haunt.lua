@@ -118,7 +118,7 @@ local function draw(win, buf, title)
     else
         win = api.nvim_open_win(buf, true, config)
     end
-    api.nvim_win_set_option(win, "winblend", Haunt.config.window.winblend)
+    api.nvim_set_option_value("winblend", Haunt.config.window.winblend, { win = win })
     return win
 end
 
@@ -133,8 +133,8 @@ local function floating(buf, win, bt, ft, title)
         buf = api.nvim_create_buf(true, false)
     end
     if bt ~= "terminal" then -- Ignore bt = "terminal" which is not allowed.
-        api.nvim_buf_set_option(buf, "buftype", bt)
-        api.nvim_buf_set_option(buf, "filetype", ft)
+        api.nvim_set_option_value("buftype", bt, { buf = buf })
+        api.nvim_set_option_value("filetype", ft, { buf = buf })
     end
     win = draw(win, buf, title)
     api.nvim_set_current_win(win)
@@ -151,9 +151,9 @@ local function lock_to_win(buf, win)
                 if api.nvim_win_is_valid(win) then api.nvim_set_current_buf(ev.buf) end
                 if vim.o.buftype == "help" then
                     -- Set ft=help again to redraw conceal formatting.
-                    api.nvim_buf_set_option(ev.buf, "filetype", "help")
+                    api.nvim_set_option_value("filetype", "help", { buf = ev.buf })
                     -- Restore transparency.
-                    api.nvim_win_set_option(win, "winblend", Haunt.config.window.winblend)
+                    api.nvim_set_option_value("winblend", Haunt.config.window.winblend, { win = win })
                 end
             end)
         })
@@ -303,7 +303,7 @@ function Haunt.help(opts)
     })
     -- Scheduled, because `nvim_win_close` requires waiting for released textlock.
     vim.schedule(function() vim.cmd(table.concat(cmdparts)) end)
-    api.nvim_buf_set_option(state.buf, "filetype", "help") -- Set ft again to redraw conceal formatting.
+    api.nvim_set_option_value("filetype", "help", { buf = state.buf }) -- Set ft again to redraw conceal formatting.
     state.title = "help"
     set_state(state)
 end
