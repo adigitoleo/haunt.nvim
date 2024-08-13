@@ -19,3 +19,4 @@ dep/mini.nvim/.git:
 clean:
 	git submodule rm deps/mini.nvim
 	git commit
+	rm -rf doc/tags
