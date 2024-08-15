@@ -1,31 +1,36 @@
-local common = require('test.common')
 local new_set = MiniTest.new_set
 local expect = MiniTest.expect
 
-local T = new_set({
-    hooks = {
-        pre_case = common.setup,
-        post_case = common.teardown,
-        post_once = common.child.stop,
-    }
-})
+local T = new_set()
 
-T['default'] = function() haunt.setup {} end
-T['all-valid'] = function()
-    vim.cmd [[lua << EOF
-        haunt.setup {
-            define_commands = false,
-            window = {
-                width_frac = 0.7,
-                height_frac = 0.7,
-                winblend = 33,
-                border = "double",
-                show_title = false,
-                title_pos = "right",
-                zindex = 12,
-            }
+T['default'] = function()
+    local h = haunt.setup {}
+    expect.equality(h.config, {
+        define_commands = true,
+        window = {
+            width_frac = 0.8,
+            height_frac = 0.8,
+            winblend = 30,
+            border = "single",
+            show_title = true,
+            title_pos = "left",
+            zindex = 11,
         }
-EOF]]
+    })
+end
+T['all-valid'] = function()
+    expect.no_error(haunt.setup, {
+        define_commands = false,
+        window = {
+            width_frac = 0.7,
+            height_frac = 0.7,
+            winblend = 33,
+            border = "double",
+            show_title = false,
+            title_pos = "right",
+            zindex = 12,
+        }
+    })
 end
 
 local _c = haunt.config
