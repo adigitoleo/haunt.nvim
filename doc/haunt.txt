@@ -112,7 +112,9 @@ FUNCTIONS					*haunt-functions* *haunt-api*
 
 This plugin exposes a few functions via the `require("haunt")` Lua namespace
 which can be used in custom command definitions or key bindings. They are
-listed in the table below.
+listed in the table below. Note that all functions except `ls` are not safe to
+be executed when |textlock| is active (i.e. you may need to use
+|vim.schedule| or |vim.schedule_wrap|).
 
 	function	description ~
 	----------------------------------------------------------------------
