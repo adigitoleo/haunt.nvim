@@ -17,6 +17,5 @@ dep/mini.nvim/.git:
 
 .PHONY: test test_file clean
 clean:
-	git submodule rm deps/mini.nvim
-	git commit
+	git submodule deinit dep/mini.nvim && rm -rf .git/modules/dep/mini.vim
 	rm -rf doc/tags
