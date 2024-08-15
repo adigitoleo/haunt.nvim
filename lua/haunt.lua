@@ -1,6 +1,6 @@
 local api = vim.api
 local fn = vim.fn
-local sleep = vim.uv.sleep ---@diagnostic disable-line: undefined-field
+local sleep = vim.uv.sleep
 local command = api.nvim_create_user_command
 local Haunt = {}
 

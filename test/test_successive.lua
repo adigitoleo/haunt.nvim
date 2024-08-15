@@ -3,7 +3,7 @@ local child = tc.child
 local fn = child.fn
 local api = child.api
 local input = child.type_keys
-local sleep = vim.uv.sleep ---@diagnostic disable-line: undefined-field
+local sleep = vim.uv.sleep
 
 local new_set = MiniTest.new_set
 local expect = MiniTest.expect
