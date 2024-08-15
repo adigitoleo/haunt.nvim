@@ -1,5 +1,7 @@
 image: archlinux
 packages:
+  - man-db
+  - man-pages
   - neovim
   - ripgrep
   - fzf
