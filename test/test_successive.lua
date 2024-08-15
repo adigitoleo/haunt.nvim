@@ -139,7 +139,7 @@ T['term-ijk'] = function()
     eq(fn.bufnr(), child.t.HauntState.buf)
     tc.lua(cmds[2])
     sleep(321)
-    for _, v in pairs({titles[1], titles[2]}) do
+    for _, v in pairs({ titles[1], titles[2] }) do
         eq(haskey(child.t.HauntState.termbufs, v), true)
     end
     eq(child.t.HauntState.termbufs[titles[2]], child.t.HauntState.buf)
@@ -217,7 +217,7 @@ T['term-other-ij'] = new_set({
             'haunt.term({ fargs = { "ls" } })',
             'haunt.term({ fargs = { "-t", "foo" } })',
             function() eq(vim.tbl_keys(child.t.HauntState.termbufs)[1], "ls") end,
-            function() eq(vim.tbl_keys(child.t.HauntState.termbufs)[2], "foo") end,
+            function() for _, v in pairs({ "ls", "foo" }) do eq(haskey(child.t.HauntState.termbufs, v), true) end end,
             true
         },
     }
