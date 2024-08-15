@@ -1,3 +1,3 @@
-[submodule "deps/mini.nvim"]
+[submodule "dep/mini.nvim"]
 	path = dep/mini.nvim
 	url = https://github.com/echasnovski/mini.nvim
