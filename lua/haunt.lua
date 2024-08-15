@@ -142,7 +142,15 @@ local function floating(buf, win, bt, ft, title)
     -- bt: desired buftype
     -- ft: desired filetype
     -- title: title to be displayed in the window border
-    if not api.nvim_buf_is_valid(buf) then
+
+    -- New buffer if old one is gone, or we're switching from a terminal (cannot set 'buftype')
+    -- New buffer any time that we are making a help or man buffer.
+    if (
+            not api.nvim_buf_is_valid(buf)
+            or (bt ~= "terminal" and api.nvim_get_option_value("buftype", { buf = buf }) == "terminal")
+            or (bt == "help")
+            or (ft == "man")
+        ) then
         buf = api.nvim_create_buf(true, false)
     end
     if bt ~= "terminal" then -- Setting 'buftype' to "terminal" is not allowed, `draw` uses |termopen|.
