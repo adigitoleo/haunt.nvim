@@ -163,21 +163,31 @@ local function floating(buf, win, bt, ft, title)
     return buf, win
 end
 
--- Don't allow switching buffers of the floating window except via our API.
-local function lock_to_win(buf, win)
-    api.nvim_create_autocmd({ "BufWinLeave" },
-        {
-            buffer = buf,
-            callback = vim.schedule_wrap(function(ev)
-                if api.nvim_win_is_valid(win) then api.nvim_set_current_buf(ev.buf) end
-                if vim.o.buftype == "help" then
-                    -- Set ft=help again to redraw conceal formatting.
-                    api.nvim_set_option_value("filetype", "help", { buf = ev.buf })
-                    -- Restore transparency.
-                    api.nvim_set_option_value("winblend", Haunt.config.window.winblend, { win = win })
-                end
-            end)
-        })
+-- -- Don't allow switching buffers of the floating window except via our API.
+-- local function lock_to_win(buf, win)
+--     api.nvim_create_autocmd({ "BufWinLeave" },
+--         {
+--             buffer = buf,
+--             callback = vim.schedule_wrap(function(ev)
+--                 vim.print(vim.inspect(ev))
+--                 -- if vim.o.buftype ~= "help" and vim.o.filetype ~= "man" then
+--                 -- if api.nvim_win_is_valid(win) then api.nvim_set_current_buf(ev.buf) end
+--                 -- if vim.o.buftype == "help" or vim.o.filetype == "man" then
+--                 --     api.nvim_buf_delete(ev.buf, { force = true })
+--                 -- elseif api.nvim_win_is_valid(win) then
+--                 --     api.nvim_set_current_buf(ev.buf)
+--                 -- end
+--                 -- elseif vim.o.buftype == "help" then
+--                 -- Set ft=help again to redraw conceal formatting.
+--                 -- api.nvim_set_option_value("filetype", "help", { buf = ev.buf })
+--                 -- Restore transparency.
+--                 -- api.nvim_set_option_value("winblend", Haunt.config.window.winblend, { win = win })
+--                 -- end
+--             end)
+--         })
+-- end
+
+local function add_resized_hook(buf)
     api.nvim_create_autocmd({ "VimResized" },
         {
             buffer = buf,
