@@ -124,7 +124,7 @@ local function draw(win, buf, title)
     }
     if title ~= nil then
         config.title = Haunt.config.window.show_title and "[" .. title .. "]" or nil
-        config.title_pos = Haunt.config.window.title_pos
+        config.title_pos = config.title and Haunt.config.window.title_pos or nil
     end
     if api.nvim_buf_is_valid(vim.t.HauntState.buf) and api.nvim_win_is_valid(vim.t.HauntState.win) then
         api.nvim_win_set_config(win, config)
