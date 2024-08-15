@@ -189,21 +189,13 @@ local function lock_to_win(buf, win)
         })
 end
 
-local function get_state()
-    local state = {}
-    if vim.t.HauntState == nil then
-        state = vim.deepcopy(Haunt.state)
-        vim.t.HauntState = state
-    else
-        state = vim.tbl_deep_extend("force", state, vim.t.HauntState)
-    end
-    return state
-end
-
 local function set_state(state)
-    vim.t.HauntState = state
+    vim.t.HauntState = vim.deepcopy(state)
     if api.nvim_buf_is_valid(vim.t.HauntState.buf) and api.nvim_win_is_valid(vim.t.HauntState.win) then
-        lock_to_win(vim.t.HauntState.buf, vim.t.HauntState.win)
+        -- if lock ~= nil then
+        --     lock_to_win(vim.t.HauntState.buf, vim.t.HauntState.win)
+        -- end
+        add_resized_hook(vim.t.HauntState.buf)
     end
 end
 
