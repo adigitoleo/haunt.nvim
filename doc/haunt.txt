@@ -25,7 +25,8 @@ hidden during long-running terminal jobs and later restored to the floating
 window view. By contrast, only one floating man page and help buffer are
 supported (per |tabpage|). When these are closed, they will not be restored;
 simply pass the same argument to |:HauntHelp| or |:HauntMan| instead. The
-plugin requires NeoVim, and is know to work on versions 0.9.5+.
+plugin requires NeoVim, and is tested on the latest NeoVim version available
+for Arch Linux: <https://archlinux.org/packages/extra/x86_64/neovim/>.
 
 Bug fixes and feature requests are welcome at my public inbox: >
 
