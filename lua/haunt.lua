@@ -27,11 +27,11 @@ Haunt.config = {
     },
 }
 
-Haunt.state = {                -- Local to a tabpage
-    buf = buf_invalid,         -- ID of the buffer currently displayed in the floating window
-    win = win_invalid,         -- ID of the floating window
-    title = "",                -- Most recent title of the floating window
-    termbufs = {},             -- maps known terminal 'titles' to their buffer IDs
+Haunt.state = {        -- Local to a tabpage
+    buf = buf_invalid, -- ID of the buffer currently displayed in the floating window
+    win = win_invalid, -- ID of the floating window
+    title = "",        -- Most recent title of the floating window
+    termbufs = {},     -- maps known terminal 'titles' to their buffer IDs
 }
 
 -- Use error(), which is blocking, instead of nvim_err_writeln(), which is not.
@@ -185,6 +185,10 @@ end
 
 -- Unset 'winfixbuf' to allow switching the buffer using our API.
 local function remove_fixbuf(state)
+    if fn.has('nvim-0.10') == 0 then
+        warn("using sticky buffers requires NeoVim 0.10 or later")
+        return state
+    end
     if win_is_valid(state.win) then
         if api.nvim_get_option_value("winfixbuf", { win = state.win }) then
             api.nvim_set_option_value("winfixbuf", false, { win = state.win })
