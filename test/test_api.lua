@@ -51,6 +51,9 @@ T['help-api-invalid'] = function()
         tc.rethrow_messages()
     end, "E149: Sorry, no help for 0245240582304952304952309526")
     sleep(321)
+    eq(tc.getopt("buftype"), "help")
+    eq(tc.getopt("filetype"), "help")
+    eq(fn.expand('<cword>'), "E149")
 end
 
 -- Should open :terminal
