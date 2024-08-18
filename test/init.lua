@@ -27,7 +27,7 @@ function TestInit()
     haunt._err_blocking = true
 end
 
-command("TestInit", TestInit, { desc = "Initialise testing context" })
+command("TestInit", TestInit, { bar = true, desc = "Initialise testing context" })
 command("TestRun", [[=MiniTest.run()]], { desc = "Run test suite" })
 
 -- Load test dependency automatically if headless.
