@@ -349,7 +349,6 @@ function Haunt.help(opts)
     if (opts and opts.fargs and vim.tbl_count(opts.fargs) > 0) then arg = opts.fargs[1] end
     state.buf, state.win = floating(state.buf, state.win, "help", "help", "help")
     sleep(100) -- Wait for floating window to open.
-    -- add_buffer_switch_guard(state.buf, state.win)
     local cmdparts = {}
     -- Catch E149 (invalid help tag) and redirect to :help E149.
     -- This is less destructive and much easier to handle than closing the window.
@@ -380,7 +379,6 @@ function Haunt.man(opts)
     end
     state.buf, state.win = floating(state.buf, state.win, "nofile", "man", "man")
     sleep(100) -- Wait for floating window to open.
-    -- add_buffer_switch_guard(state.buf, state.win)
     local cmdparts = {}
     if (opts and opts.bang) then
         cmdparts = { "try|b#|Man!|catch /man.lua: /|Man nvim(1)|echoerr v:exception|endtry" }
@@ -394,7 +392,6 @@ function Haunt.man(opts)
             "|catch /man.lua: /|Man nvim(1)|echoerr v:exception|endtry",
         }
     end
-    -- Scheduled, because `nvim_win_close` requires waiting for released textlock.
     vim.cmd(table.concat(cmdparts))
     -- Wait for :Man to load and maybe change the buffer number.
     sleep(100)
