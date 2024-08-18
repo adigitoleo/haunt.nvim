@@ -168,8 +168,9 @@ all help tags).
 								*:HauntMan*
 
 This command launches a floating man page, and relies on |man.lua|. The
-optional argument specifies the man page to be opened. Otherwise, the word
-under the cursor is used as the man page query. Tab-completion via
+optional argument specifies the man page to be opened. It can be prefaced with
+a section number, as per the examples for |:Man|. Otherwise, the word under
+the cursor is used as the man page query. Tab-completion via
 |command-complete| is set to a thin wrapper of `require("man").man_complete`.
 
 The variant `:HauntMan!` renders the current buffer as a man page.
