@@ -1,4 +1,4 @@
-*haunt*	Floating windows for terminals, man pages and help buffers
+*haunt*	Floating windows for terminals, man pages and help buffers >
 					      .-.
 					     ( O )
 					  /\_.' '._/\
@@ -12,6 +12,8 @@
 
 		haunt (noun):
 		  a place frequented by a specified person or group of people
+
+Type |gO| to see the table of contents.
 
 ==============================================================================
 INTRODUCTION						*haunt-introduction*
