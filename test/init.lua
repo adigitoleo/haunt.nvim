@@ -1,6 +1,17 @@
 local command = vim.api.nvim_create_user_command
 vim.opt.rtp:append(vim.fn.getcwd())
 
+local function handle_sigterm()
+    -- Propagate TERM signal to child instances.
+    vim.print("Running sigterm handler")
+    os.execute('pkill -TERM -P ' .. tostring(vim.uv.os_getpid()))
+    -- Exit stage left.
+    vim.cmd("qa!")
+end
+
+local sigterm_handle = vim.uv.new_signal()
+vim.uv.signal_start(sigterm_handle, "sigterm", handle_sigterm)
+
 function TestInit()
     vim.opt.rtp:append('dep/mini.nvim')
     require('mini.test').setup({
