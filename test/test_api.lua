@@ -90,8 +90,15 @@ T['term-api']['multi'] = function(fargs, title)
     eq(vim.tbl_keys(child.t.HauntState.termbufs)[1], title)
 end
 
-T['man-api-nargs0'] = function() -- Can't run :Man without an argument
-    err(function() tc.lua('haunt.man()') end, ":Man requires an argument")
+T['man-api-noargs'] = new_set({
+    parametrize = {
+        'haunt.man()',
+        [[haunt.man({ fargs = { '""' } })]],
+        [[haunt.man({ fargs = { "'\"\"'" } })]],
+    }
+})
+T['man-api-noargs']['multi'] = function(s) -- Can't run :Man without an argument
+    err(function() tc.lua(s) end, ":Man requires an argument")
 end
 
 -- Check both valid and invalid :Man <cword>
@@ -118,6 +125,19 @@ end
 -- Can't open :Man foo
 T['man-api-nargs1-bad'] = function()
     err(function() tc.lua('haunt.man({ fargs = { "foo" } })') end, "no manual entry for foo")
+    sleep(321)
+    eq(tc.getopt("filetype"), "man")
+    eq(fn.expand('<cword>'), 'NVIM(1)')
+end
+
+T['man-api-bang'] = function()
+    tc.put { "this should be rendered as a man page" }
+    tc.lua('haunt.man({ bang = true })')
+    sleep(321)
+    neq(child.t.HauntState.buf, -1)
+    neq(child.t.HauntState.win, -1)
+    eq(tc.getopt("filetype"), "man")
+    eq(tc.get(), { "this should be rendered as a man page" })
 end
 
 -- These call vim.print and so must be wrapped with :silent (errors will still propagate)
