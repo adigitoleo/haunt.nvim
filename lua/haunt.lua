@@ -391,7 +391,7 @@ function Haunt.man(opts)
     -- add_buffer_switch_guard(state.buf, state.win)
     local cmdparts = {}
     if (opts and opts.bang) then
-        cmdparts = { "Man!" }
+        cmdparts = { "try|b#|Man!|catch /man.lua: /|Man nvim(1)|echoerr v:exception|endtry" }
     else
         -- Catch man.lua errors (e.g. no man page found) and redirect to man nvim.
         -- This is less destructive and much easier to handle than closing the window.
