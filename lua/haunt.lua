@@ -4,6 +4,16 @@ local sleep = vim.uv.sleep
 local command = api.nvim_create_user_command
 local Haunt = {}
 
+-- Values of 0 for buffer/window ID are ambiguously used in the api
+-- to indicate either an error or as an alias for the "current" buffer/window,
+-- or sometimes even for the "alternate" buffer, e.g. :h bufname().
+-- Here, we define some wrappers to remove the aliasing.
+local buf_invalid = 0 -- Error code from nvim_create_buf()
+local win_invalid = 0 -- Error code from nvim_open_win()
+local job_invalid = 0 -- One of the error codes from termopen(), the other is -1
+local function win_is_valid(win) return api.nvim_win_is_valid(win) and win ~= win_invalid end
+local function buf_is_valid(buf) return api.nvim_buf_is_valid(buf) and buf ~= buf_invalid end
+
 Haunt.config = {
     define_commands = true, -- toggle to prevent definition of default user commands
     window = {
@@ -17,11 +27,11 @@ Haunt.config = {
     },
 }
 
-Haunt.state = {    -- Local to a tabpage
-    buf = -1,      -- ID of the buffer currently displayed in the floating window
-    win = -1,      -- ID of the floating window
-    title = "",    -- Most recent title of the floating window
-    termbufs = {}, -- maps known terminal 'titles' to their buffer IDs
+Haunt.state = {                -- Local to a tabpage
+    buf = buf_invalid,         -- ID of the buffer currently displayed in the floating window
+    win = win_invalid,         -- ID of the floating window
+    title = "",                -- Most recent title of the floating window
+    termbufs = {},             -- maps known terminal 'titles' to their buffer IDs
 }
 
 -- Use error(), which is blocking, instead of nvim_err_writeln(), which is not.
@@ -126,12 +136,17 @@ local function draw(win, buf, title)
         config.title = Haunt.config.window.show_title and "[" .. title .. "]" or nil
         config.title_pos = config.title and Haunt.config.window.title_pos or nil
     end
-    if api.nvim_buf_is_valid(vim.t.HauntState.buf) and api.nvim_win_is_valid(vim.t.HauntState.win) then
+    if not buf_is_valid(buf) then
+        return win_invalid
+    elseif win_is_valid(win) then
         api.nvim_win_set_config(win, config)
     else
         win = api.nvim_open_win(buf, true, config)
+        if win == win_invalid then return win_invalid end
     end
-    api.nvim_set_option_value("winblend", Haunt.config.window.winblend, { win = win })
+    -- catch win=0, <https://github.com/neovim/neovim/discussions/30073#discussioncomment-10367494>
+    if not win_is_valid(win) then warn("unable to draw invalid window") end
+    api.nvim_set_option_value("winblend", Haunt.config.window.winblend, { win = fn.win_getid(win) })
     return win
 end
 
@@ -146,69 +161,61 @@ local function floating(buf, win, bt, ft, title)
     -- New buffer if old one is gone, or we're switching from a terminal (cannot set 'buftype')
     -- New buffer any time that we are making a help or man buffer.
     if (
-            not api.nvim_buf_is_valid(buf)
+            not buf_is_valid(buf) -- NOTE: Keep this condition first, make sure buf=0 is handled upfront.
             or (bt ~= "terminal" and api.nvim_get_option_value("buftype", { buf = buf }) == "terminal")
             or (bt == "help")
             or (ft == "man")
         ) then
         buf = api.nvim_create_buf(true, false)
     end
+    -- catch buf=0, <https://github.com/neovim/neovim/discussions/30073#discussioncomment-10367494>
+    if not buf_is_valid(buf) then warn("unable to prepare invalid buffer") end
     if bt ~= "terminal" then -- Setting 'buftype' to "terminal" is not allowed, `draw` uses |termopen|.
         api.nvim_set_option_value("buftype", bt, { buf = buf })
         api.nvim_set_option_value("filetype", ft, { buf = buf })
     end
     win = draw(win, buf, title)
+    -- catch win=0, <https://github.com/neovim/neovim/discussions/30073#discussioncomment-10367494>
+    if not win_is_valid(win) then warn("unable to focus invalid window") end
+
     api.nvim_set_current_win(win)
     api.nvim_set_current_buf(buf)
     return buf, win
 end
 
--- -- Don't allow switching buffers of the floating window except via our API.
--- local function lock_to_win(buf, win)
---     api.nvim_create_autocmd({ "BufWinLeave" },
---         {
---             buffer = buf,
---             callback = vim.schedule_wrap(function(ev)
---                 vim.print(vim.inspect(ev))
---                 -- if vim.o.buftype ~= "help" and vim.o.filetype ~= "man" then
---                 -- if api.nvim_win_is_valid(win) then api.nvim_set_current_buf(ev.buf) end
---                 -- if vim.o.buftype == "help" or vim.o.filetype == "man" then
---                 --     api.nvim_buf_delete(ev.buf, { force = true })
---                 -- elseif api.nvim_win_is_valid(win) then
---                 --     api.nvim_set_current_buf(ev.buf)
---                 -- end
---                 -- elseif vim.o.buftype == "help" then
---                 -- Set ft=help again to redraw conceal formatting.
---                 -- api.nvim_set_option_value("filetype", "help", { buf = ev.buf })
---                 -- Restore transparency.
---                 -- api.nvim_set_option_value("winblend", Haunt.config.window.winblend, { win = win })
---                 -- end
---             end)
---         })
--- end
+-- Unset 'winfixbuf' to allow switching the buffer using our API.
+local function remove_fixbuf(state)
+    if win_is_valid(state.win) then
+        if api.nvim_get_option_value("winfixbuf", { win = state.win }) then
+            api.nvim_set_option_value("winfixbuf", false, { win = state.win })
+        end
+    end
+    return state
+end
 
+-- Make floating window respond to VimResized events.
 local function add_resized_hook(buf)
     api.nvim_create_autocmd({ "VimResized" },
         {
             buffer = buf,
             callback = vim.schedule_wrap(function(ev)
-                if api.nvim_win_is_valid(vim.t.HauntState.win) and api.nvim_buf_is_valid(ev.buf) then
+                if win_is_valid(vim.t.HauntState.win) and buf_is_valid(ev.buf) then
                     draw(vim.t.HauntState.win, ev.buf)
                 end
             end)
         })
 end
 
+-- Set tab-local state to a copy of the provided state.
 local function set_state(state)
-    vim.t.HauntState = vim.deepcopy(state)
-    if api.nvim_buf_is_valid(vim.t.HauntState.buf) and api.nvim_win_is_valid(vim.t.HauntState.win) then
-        -- if lock ~= nil then
-        --     lock_to_win(vim.t.HauntState.buf, vim.t.HauntState.win)
-        -- end
-        add_resized_hook(vim.t.HauntState.buf)
+    if buf_is_valid(state.buf) and win_is_valid(state.win) then
+        api.nvim_set_option_value("winfixbuf", true, { win = fn.win_getid(state.win) })
+        add_resized_hook(state.buf)
     end
+    vim.t.HauntState = vim.deepcopy(state)
 end
 
+-- Throw a warning/error with the message `msg` and set tab-local state to `state`.
 local function termfail(msg, state)
     warn(msg)
     set_state(state)
@@ -221,11 +228,11 @@ end
 
 -- Implementation for :HauntTerm.
 function Haunt.term(opts)
-    local state = get_state()
+    local state = remove_fixbuf(get_state())
     local title = nil
     local cmd = { vim.o.shell }
-    local termbuf_new = -1
-    local termbuf = -1
+    local termbuf_new = buf_invalid
+    local termbuf = buf_invalid
     local create_new = false
     local job_id = nil
 
@@ -278,6 +285,7 @@ function Haunt.term(opts)
 
     -- Floating window creation and |termopen| call.
     termbuf_new, state.win = floating(termbuf, state.win, "terminal", "", title)
+    if termbuf_new == buf_invalid or state.win == win_invalid then return job_invalid end
     if create_new then
         job_id = fn.termopen(cmd, {
             on_exit = function()
@@ -285,7 +293,7 @@ function Haunt.term(opts)
                 -- wait for the buffer to actually close before the cleanup.
                 api.nvim_create_autocmd({ "BufUnload" }, {
                     buffer = termbuf_new,
-                    callback = function(ev)
+                    callback = function(_)
                         if vim.t.HauntState ~= nil then
                             local _state = vim.t.HauntState
                             _state.termbufs[title] = nil
@@ -298,6 +306,12 @@ function Haunt.term(opts)
                 end
             end
         })
+        -- Flatten possible error codes into job_invalid, we don't care why it failed here.
+        if job_id == job_invalid or job_id == -1 then
+            job_id = job_invalid
+            warn("failed to open new terminal buffer")
+            return job_id
+        end
         state.termbufs[title] = termbuf_new
         state.buf = termbuf_new
     else
@@ -323,7 +337,7 @@ function Haunt.ls(opts)
         )
     elseif vim.t.HauntState ~= nil then
         for k, v in pairs(vim.t.HauntState.termbufs) do
-            if api.nvim_buf_is_valid(v) then
+            if buf_is_valid(v) then
                 terminals[k] = v
             end
         end
@@ -334,17 +348,12 @@ end
 
 -- Implementation for :HauntHelp.
 function Haunt.help(opts)
-    local state = get_state()
+    local state = remove_fixbuf(get_state())
     local arg = fn.expand("<cword>")
-    -- TODO: Tracking the number of :messages is an attempt to introspect failure of the vim.cmd call below.
-    -- It is not perfect, because there could be other sources of :messages during this time.
-    local n_messages = #fn.split(fn.execute('messages'), "\n")
     if (opts and vim.tbl_count(opts.fargs) > 0) then arg = opts.fargs[1] end
-    -- vim.schedule(function()
-        state.buf, state.win = floating(state.buf, state.win, "help", "help", "help")
-    -- end)
+    state.buf, state.win = floating(state.buf, state.win, "help", "help", "help")
     sleep(100) -- Wait for floating window to open.
-    -- lock_to_win(state.buf, state.win)
+    -- add_buffer_switch_guard(state.buf, state.win)
     local cmdparts = {}
     -- Catch E149 (invalid help tag) and redirect to :help E149.
     -- This is less destructive and much easier to handle than closing the window.
@@ -357,30 +366,25 @@ function Haunt.help(opts)
     -- Wait for :help to load and maybe change the buffer number.
     sleep(100)
 
-    if #fn.split(fn.execute('messages'), "\n") == n_messages then
-        api.nvim_set_option_value("filetype", "help", { buf = state.buf }) -- Set ft again to redraw conceal formatting.
-        state.title = "help"
-        set_state(state)
-    end
+    api.nvim_set_option_value("filetype", "help", { buf = state.buf }) -- Set ft again to redraw conceal formatting.
+    state.title = "help"
+    set_state(state)
 end
 
 -- Implementation for :HauntMan[!].
 function Haunt.man(opts)
-    local state = get_state()
+    local state = remove_fixbuf(get_state())
     local arg = fn.expand("<cword>")
-    -- TODO: Tracking the number of :messages is an attempt to introspect failure of the vim.cmd call below.
-    -- It is not perfect, because there could be other sources of :messages during this time.
-    local n_messages = #fn.split(fn.execute('messages'), "\n")
     if (opts and vim.tbl_count(opts.fargs) > 0) then arg = opts.fargs[1] end
     if #arg <= 0 then
         warn(":Man requires an argument")
         return
     end
     -- vim.schedule(function()
-        state.buf, state.win = floating(state.buf, state.win, "nofile", "man", "man")
+    state.buf, state.win = floating(state.buf, state.win, "nofile", "man", "man")
     -- end)
     sleep(100) -- Wait for floating window to open.
-    -- lock_to_win(state.buf, state.win)
+    -- add_buffer_switch_guard(state.buf, state.win)
     local cmdparts = {}
     if (opts and opts.bang) then
         cmdparts = { "Man!" }
@@ -391,7 +395,7 @@ function Haunt.man(opts)
         cmdparts = {
             "try|Man ",
             arg,
-            "|catch /man.lua: /|Man nvim|echoerr v:exception|endtry",
+            "|catch /man.lua: /|Man nvim(1)|echoerr v:exception|endtry",
         }
     end
     -- Scheduled, because `nvim_win_close` requires waiting for released textlock.
@@ -399,24 +403,24 @@ function Haunt.man(opts)
     -- Wait for :Man to load and maybe change the buffer number.
     sleep(100)
 
-    if #fn.split(fn.execute('messages'), "\n") == n_messages then
-        state.title = "man"
-        set_state(state)
-    end
+    state.title = "man"
+    set_state(state)
 end
 
+-- Close floating window and reset tab-local state to defaults, except for the termbufs table.
 function Haunt.reset()
-    local state = get_state()
-    if api.nvim_buf_is_valid(state.buf) then
+    local state = remove_fixbuf(get_state())
+    if buf_is_valid(state.buf) then
         local ft = api.nvim_get_option_value("filetype", { buf = state.buf })
         local bt = api.nvim_get_option_value("buftype", { buf = state.buf })
         if bt == "help" or ft == "man" then api.nvim_buf_delete(state.buf, { force = true }) end
-        state.buf = Haunt.state.buf
     end
-    if api.nvim_win_is_valid(state.win) then
+    if win_is_valid(state.win) then
         api.nvim_win_close(state.win, true)
-        state.win = Haunt.state.win
     end
+    state.buf = Haunt.state.buf
+    state.win = Haunt.state.win
+    state.title = Haunt.state.title
     vim.t.HauntState = state
 end
 
