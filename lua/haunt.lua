@@ -241,7 +241,7 @@ function Haunt.term(opts)
     local job_id = nil
 
     -- Argument handling.
-    if (opts and opts.fargs[1] == "-t") then -- Pick up explicit titles set with -t <title>.
+    if (opts and opts.fargs and opts.fargs[1] == "-t") then -- Pick up explicit titles set with -t <title>.
         table.remove(opts.fargs, 1)
         title = opts.fargs[1]
         if title ~= nil then
@@ -253,7 +253,7 @@ function Haunt.term(opts)
     end
 
     -- Support for opening existing (non-floating) terminal buffers.
-    if (opts and vim.tbl_count(opts.fargs) > 0) then cmd = opts.fargs end
+    if (opts and opts.fargs and vim.tbl_count(opts.fargs) > 0) then cmd = opts.fargs end
     local maybe_buf_number = tonumber(cmd[1], 10) -- Allow opening existing terminal buffers by buffer number.
     if maybe_buf_number ~= nil then
         if title == nil then
@@ -354,7 +354,7 @@ end
 function Haunt.help(opts)
     local state = remove_fixbuf(get_state())
     local arg = fn.expand("<cword>")
-    if (opts and vim.tbl_count(opts.fargs) > 0) then arg = opts.fargs[1] end
+    if (opts and opts.fargs and vim.tbl_count(opts.fargs) > 0) then arg = opts.fargs[1] end
     state.buf, state.win = floating(state.buf, state.win, "help", "help", "help")
     sleep(100) -- Wait for floating window to open.
     -- add_buffer_switch_guard(state.buf, state.win)
@@ -379,7 +379,7 @@ end
 function Haunt.man(opts)
     local state = remove_fixbuf(get_state())
     local arg = fn.expand("<cword>")
-    if (opts and vim.tbl_count(opts.fargs) > 0) then arg = opts.fargs[1] end
+    if (opts and opts.fargs and vim.tbl_count(opts.fargs) > 0) then arg = opts.fargs[1] end
     if #arg <= 0 then
         warn(":Man requires an argument")
         return
