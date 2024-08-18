@@ -293,18 +293,7 @@ function Haunt.term(opts)
     if create_new then
         job_id = fn.termopen(cmd, {
             on_exit = function()
-                -- Job exits -> create autocommand to clean this buffer from the state,
-                -- wait for the buffer to actually close before the cleanup.
-                api.nvim_create_autocmd({ "BufUnload" }, {
-                    buffer = termbuf_new,
-                    callback = function(_)
-                        if vim.t.HauntState ~= nil then
-                            local _state = vim.t.HauntState
-                            _state.termbufs[title] = nil
-                            vim.t.HauntState = _state
-                        end
-                    end
-                })
+                Haunt.ls({}, true)
                 if cmd[1] == vim.o.shell then
                     api.nvim_input("<Cr>")
                 end
@@ -328,7 +317,7 @@ function Haunt.term(opts)
 end
 
 -- Implementation for :HauntLs[!].
-function Haunt.ls(opts)
+function Haunt.ls(opts, silent)
     local terminals = {}
     if (opts and opts.bang) then
         vim.tbl_map(function(v) terminals[api.nvim_buf_get_var(v, "term_title")] = v end,
@@ -347,7 +336,10 @@ function Haunt.ls(opts)
         end
         vim.t.HauntState.termbufs = terminals -- Take the opportunity to clean up dead buffer refs.
     end
-    vim.print(vim.inspect(terminals))
+    if silent == nil or not silent then
+        vim.print(vim.inspect(terminals))
+    end
+    return terminals
 end
 
 -- Implementation for :HauntHelp.
