@@ -27,24 +27,27 @@ and command definitions. To omit definition of user-commands, use:
     require('haunt').setup { define_commands = false }
 
 Available commands and options are described in `:help haunt`
-(also `:HauntHelp haunt` if you allowed default command definitions).
+(or `:HauntHelp haunt` if you allowed default command definitions).
 
 ## Contributing
 
 New versions are generally developed on the `dev` branch.
 Please send patches/queries to my [public inbox](https://lists.sr.ht/~adigitoleo/public-inbox).
-Current issues and pending feature requests are listed on [my nvim-plugins tracker](https://todo.sr.ht/~adigitoleo/nvim-plugins).
+Current issues and pending feature requests are listed on [my nvim-plugins tracker](https://todo.sr.ht/~adigitoleo/nvim-plugins?search=%5Bhaunt.nvim%5D).
 The source code includes a test suite which can be run using `make test`.
 Running the test suite for the first time requires an internet connection,
 because test suite dependencies need to be downloaded.
+The test suite can also be run interactively by opening NeoVim with
+
+    nvim -u test/init.lua
+
+And running `:TestInit|TestRun`. The current CI test status is shown below:
 
 [![builds.sr.ht status](https://builds.sr.ht/~adigitoleo/haunt.nvim.svg)](https://builds.sr.ht/~adigitoleo/haunt.nvim?)
 
 ### Examples
 
-The following examples are formatted as successions of cmdline entries.
-
-*More examples which are guaranteed to work are included in the test suite!*
+*The following examples are formatted as successions of cmdline entries.*
 
 Open the documentation for this plugin in a floating window:
 
