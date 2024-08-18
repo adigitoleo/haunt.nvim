@@ -379,14 +379,14 @@ end
 function Haunt.man(opts)
     local state = remove_fixbuf(get_state())
     local arg = fn.expand("<cword>")
-    if (opts and opts.fargs and vim.tbl_count(opts.fargs) > 0) then arg = opts.fargs[1] end
-    if #arg <= 0 then
+    if (opts and opts.fargs and vim.tbl_count(opts.fargs) > 0) then
+        arg = fn.join(opts.fargs, ' ')
+    end
+    if string.len(arg) < 1 or arg == '""' or arg == "'\"\"'" then
         warn(":Man requires an argument")
         return
     end
-    -- vim.schedule(function()
     state.buf, state.win = floating(state.buf, state.win, "nofile", "man", "man")
-    -- end)
     sleep(100) -- Wait for floating window to open.
     -- add_buffer_switch_guard(state.buf, state.win)
     local cmdparts = {}
