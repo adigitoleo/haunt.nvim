@@ -92,9 +92,9 @@ end
 
 T['man-api-noargs'] = new_set({
     parametrize = {
-        'haunt.man()',
-        [[haunt.man({ fargs = { '""' } })]],
-        [[haunt.man({ fargs = { "'\"\"'" } })]],
+        { 'haunt.man()' },
+        { [[haunt.man({ fargs = { '""' } })]] },
+        { [[haunt.man({ fargs = { "'\"\"'" } })]] },
     }
 })
 T['man-api-noargs']['multi'] = function(s) -- Can't run :Man without an argument
