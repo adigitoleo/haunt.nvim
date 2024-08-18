@@ -15,17 +15,34 @@ discover the recommended NeoVim version.
 
 ![:HauntHelp screenshot](screenshot.png)
 
+## Setup
+
 Install the plugin using your preferred plugin manager. Alternatively, NeoVim
-can load packages if they are added to your 'packpath'.
+can load packages if they are added to your [`'packpath'`](https://neovim.io/doc/user/options.html#'packpath').
+
+To load the package without a plugin manager use the lua command `require('haunt')`.
+Default options are applied automatically, including floating window appearance
+and command definitions. To omit definition of user-commands, use:
+
+    require('haunt').setup { define_commands = false }
 
 Available commands and options are described in `:help haunt`
 (also `:HauntHelp haunt` if you allowed default command definitions).
 
+## Contributing
+
+New versions are generally developed on the `dev` branch.
 Please send patches/queries to my [public inbox](https://lists.sr.ht/~adigitoleo/public-inbox).
 Current issues and pending feature requests are listed on [my nvim-plugins tracker](https://todo.sr.ht/~adigitoleo/nvim-plugins).
-Notable difficulties and bugs without known fixes are listed in `:help haunt-bugs`.
+The source code includes a test suite which can be run using `make test`.
+Running the test suite for the first time requires an internet connection,
+because test suite dependencies need to be downloaded.
+
+[![builds.sr.ht status](https://builds.sr.ht/~adigitoleo/haunt.nvim.svg)](https://builds.sr.ht/~adigitoleo/haunt.nvim?)
 
 ### Examples
+
+The following examples are formatted as successions of cmdline entries.
 
 *More examples which are guaranteed to work are included in the test suite!*
 
