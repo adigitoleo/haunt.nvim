@@ -131,6 +131,9 @@ be executed when |textlock| is active (i.e. you may need to use
 	`ls({*opts})`	show the current mapping of floating terminal titles
 			to buffer numbers; with `opts.bang = true` all
 			|b:term_title|s are listed instead
+	`reset()`	close floating window and reset tab-local state to
+			defaults (except the `termbuf` listing, which is
+			preserved to facilitate terminal buffer recovery)
 
 
 ==============================================================================
@@ -179,14 +182,21 @@ same buffer.
 
 The variant `:HauntLs!` will instead list |b:term_title|s of all terminal buffers.
 
+------------------------------------------------------------------------------
+								*:HauntReset*
+
+Equivalent to `=require('haunt').reset()`. See |haunt-api| for documentation.
+Can be used to attempt recovery after tab-local state becomes corrupted.
+
 
 ==============================================================================
 BUGS								*haunt-bugs*
 
-The pseudo-public interface `vim.t.HauntState.termbufs` retains invalid buffer
-numbers if the buffers were originally non-floating. This occurs because we
-are not able to set the `on_exit` method for such buffers to have them clean
-up after themselves. We may want to consider workarounds with autocommands
-that perform a manual sweep of that lua table.
+Please use my public inbox¹ to reach out with bug reports or send patches.
+Also check the task tracker² to discover current known bugs and requests,
+and relevant discussions about work-in-progress fixes or implementations.
+
+1: <https://lists.sr.ht/~adigitoleo/public-inbox>
+2: <https://todo.sr.ht/~adigitoleo/nvim-plugins>
 
 vim:tw=78:ts=8:noet:ft=help:norl:

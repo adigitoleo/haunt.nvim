@@ -1,4 +1,4 @@
-# haunt.nvim
+# 👻 haunt.nvim
 
 Floating windows for terminals, man pages and help buffers.
 
@@ -9,6 +9,9 @@ This [NeoVim](https://neovim.io) plugin, written in Lua, offers alternative
 commands to open embedded terminals, man pages and help buffers in floating
 windows. Existing terminal buffers can also be opened in the floating window.
 Commands like `:bnext`, `:bprevious`, `:b#` etc. are suppressed in this window.
+**This plugin is currently tested on latest NeoVim on Arch Linux.**
+Check [this link](https://archlinux.org/packages/extra/x86_64/neovim/) to
+discover the recommended NeoVim version.
 
 ![:HauntHelp screenshot](screenshot.png)
 
@@ -23,6 +26,8 @@ Current issues and pending feature requests are listed on [my nvim-plugins track
 Notable difficulties and bugs without known fixes are listed in `:help haunt-bugs`.
 
 ### Examples
+
+*More examples which are guaranteed to work are included in the test suite!*
 
 Open the documentation for this plugin in a floating window:
 
