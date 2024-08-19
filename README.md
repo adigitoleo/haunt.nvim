@@ -13,7 +13,9 @@ Commands like `:bnext`, `:bprevious`, `:b#` etc. are suppressed in this window.
 Check [this link](https://archlinux.org/packages/extra/x86_64/neovim/) to
 discover the recommended NeoVim version.
 
-![:HauntHelp demo](https://adigitoleo.srht.site/haunt-nvim/haunt-nvim.mp4)
+See [this link](https://adigitoleo.srht.site/haunt-nvim/haunt-nvim.mp4) for a demo video.
+
+![:HauntHelp screenshot](screenshot.png)
 
 ## Setup
 
