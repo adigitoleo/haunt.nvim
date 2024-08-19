@@ -13,7 +13,7 @@ Commands like `:bnext`, `:bprevious`, `:b#` etc. are suppressed in this window.
 Check [this link](https://archlinux.org/packages/extra/x86_64/neovim/) to
 discover the recommended NeoVim version.
 
-![:HauntHelp screenshot](screenshot.png)
+![:HauntHelp demo](https://adigitoleo.srht.site/haunt-nvim/haunt-nvim.mp4)
 
 ## Setup
 
@@ -44,6 +44,9 @@ The test suite can also be run interactively by opening NeoVim with
 And running `:TestInit|TestRun`. The current CI test status is shown below:
 
 [![builds.sr.ht status](https://builds.sr.ht/~adigitoleo/haunt.nvim.svg)](https://builds.sr.ht/~adigitoleo/haunt.nvim?)
+
+Some developer notes and tentative feature suggestions are also included in
+[this blog post](https://adigitoleo.srht.site/haunt-nvim/).
 
 ### Examples
 
