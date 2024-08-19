@@ -212,7 +212,7 @@ end
 
 -- Set tab-local state to a copy of the provided state.
 local function set_state(state)
-    if buf_is_valid(state.buf) and win_is_valid(state.win) then
+    if buf_is_valid(state.buf) and win_is_valid(state.win) and fn.has('nvim-0.10') == 0 then
         api.nvim_set_option_value("winfixbuf", true, { win = fn.win_getid(state.win) })
         add_resized_hook(state.buf)
     end
