@@ -32,8 +32,8 @@ Bug fixes and feature requests are welcome at my public inbox: >
 
 	https://lists.sr.ht/~adigitoleo/public-inbox
 
-Patches should be applicable to the `dev` branch. See |haunt-bugs| for a
-list of current known issues that are most in need of attention.
+Patches should be applicable to the `dev` branch. See |haunt-bugs| for a link
+to a unified issue tracker (search for issues preficed with '[haunt.nvim]').
 
 
 ==============================================================================
@@ -57,10 +57,10 @@ Configuration options are described in |haunt-config|.
 ==============================================================================
 CONFIGURATION					*haunt-config* *haunt.setup*
 
-The following configuration options are supported for haunt.
+This section describes the supported configuration options.
 Any omitted values will be set to their indicated defaults.
 
-Lua configuration example~
+Lua configuration example ~
 >
 	require('haunt').setup{
 		window = {
@@ -75,9 +75,22 @@ Lua configuration example~
 						*haunt.setup.define_commands*
 
 This boolean option can be set to false to disable the default command
-definitions for |:HauntTerm|, |:HauntHelp| and |:HauntMan|. It is possible to
-use alternative command names by manually passing the |haunt-functions| to
-|nvim_create_user_command|.
+definitions for |:HauntTerm|, |:HauntHelp|, |:HauntMan|, |:HauntLs| and
+|:HauntReset|. It is possible to use alternative command names by manually
+passing the |haunt-functions| to |nvim_create_user_command|.
+
+------------------------------------------------------------------------------
+						*haunt.setup.quit_help_with_q*
+
+This boolean option can be set to false to disable the creation of a
+|Normal-mode| |mapping| which allows closing help windows with the `q` key.
+
+------------------------------------------------------------------------------
+						*haunt.setup.set_term_autocmds*
+
+This boolean option can be set to false to disable the opinionated default
+terminal buffer autocommands, which run |:startinsert| for floating terminals,
+among other quality-of-life settings.
 
 ------------------------------------------------------------------------------
 							*haunt.setup.window*
@@ -130,9 +143,12 @@ be executed when |textlock| is active (i.e. you may need to use
 	`man({*opts})`	open floating man page buffer; signature is identical
 			to `haunt_term` (if `opts.fargs` is omitted, |<cword>|
 			will be used instead)`
-	`ls({*opts})`	show the current mapping of floating terminal titles
+	`ls({*opts}[,s])` show the current mapping of floating terminal titles
 			to buffer numbers; with `opts.bang = true` all
-			|b:term_title|s are listed instead
+			|b:term_title|s are listed instead; the optional
+			second argument is a boolean that can be used to turn
+			off the |vim.print()| output (only useful when
+			collecting the return value)
 	`reset()`	close floating window and reset tab-local state to
 			defaults (except the `termbuf` listing, which is
 			preserved to facilitate terminal buffer recovery)
