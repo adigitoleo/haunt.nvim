@@ -37,8 +37,8 @@ function TestInit()
     haunt._err_blocking = true
     vim.api.nvim_echo(
         { { "Test suite setup completed for nvim instance with PID " }, { tostring(uv.os_getpid()) }, { "\n" } },
-        true,              -- show in :messages
-        { verbose = true } -- hide in logging mode
+        #vim.api.nvim_list_uis() ~= 0, -- show in :messages when not headless
+        { verbose = true }             -- hide in logging mode
     )
 end
 
