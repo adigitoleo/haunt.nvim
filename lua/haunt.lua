@@ -15,15 +15,16 @@ local function win_is_valid(win) return api.nvim_win_is_valid(win) and win ~= wi
 local function buf_is_valid(buf) return api.nvim_buf_is_valid(buf) and buf ~= buf_invalid end
 
 Haunt.config = {
-    define_commands = true, -- toggle to prevent definition of default user commands
+    define_commands = true,  -- toggle to prevent definition of default user commands
+    quit_help_with_q = true, -- toggle to prevent definition of q -> :quit mapping in help buffers
     window = {
-        width_frac = 0.8,   -- width of floating window as a fraction of total width
-        height_frac = 0.8,  -- height of floating window as a fraction of total height
-        winblend = 30,      -- transparency setting
-        border = "single",  -- border style, see :h floatwin-api
-        show_title = true,  -- show a title in the floating window border?
-        title_pos = "left", -- position for the border title, see :h api-floatwin
-        zindex = 11,        -- floating window 'priority'
+        width_frac = 0.8,    -- width of floating window as a fraction of total width
+        height_frac = 0.8,   -- height of floating window as a fraction of total height
+        winblend = 30,       -- transparency setting
+        border = "single",   -- border style, see :h floatwin-api
+        show_title = true,   -- show a title in the floating window border?
+        title_pos = "left",  -- position for the border title, see :h api-floatwin
+        zindex = 11,         -- floating window 'priority'
     },
 }
 
@@ -39,6 +40,8 @@ Haunt.state = {        -- Local to a tabpage
 Haunt._err_blocking = false
 -- Track if user commands have been defined before.
 Haunt._has_commands = false
+-- Store ID for quit_help_with_q autocommand.
+Haunt._quit_help_with_q = nil
 
 local function is_executable(cmd) if fn.executable(cmd) > 0 then return true else return false end end
 local function warn(msg)
@@ -85,7 +88,7 @@ local function validate(key, value, section)
     elseif schema[key] == nil then
         warn("unrecognized config option " .. option)
         return nil
-    elseif key == "define_commands" and got_type ~= "boolean" then
+    elseif (key == "define_commands" or key == "quit_help_with_q") and got_type ~= "boolean" then
         warn(option .. " must be a boolean")
         return schema[key]
     end
@@ -141,9 +144,17 @@ function Haunt.setup(config)
         })
         Haunt._has_commands = true
     elseif Haunt._has_commands == true then
-        for _, cmd in pairs({"HauntHelp", "HauntMan", "HauntTerm", "HauntLs", "HauntReset"}) do
+        for _, cmd in pairs({ "HauntHelp", "HauntMan", "HauntTerm", "HauntLs", "HauntReset" }) do
             api.nvim_del_user_command(cmd)
         end
+    end
+    if Haunt.config.quit_help_with_q then
+        Haunt._quit_help_with_q = api.nvim_create_autocmd({ "FileType" }, {
+            pattern = "help",
+            callback = function(ev) vim.keymap.set('n', 'q', function() vim.cmd("quit") end, { buffer = ev.buf }) end
+        })
+    elseif Haunt._quit_help_with_q ~= nil then
+        api.nvim_del_autocmd(Haunt._quit_help_with_q)
     end
     return Haunt
 end
