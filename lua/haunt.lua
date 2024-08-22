@@ -37,6 +37,8 @@ Haunt.state = {        -- Local to a tabpage
 -- Use error(), which is blocking, instead of nvim_err_writeln(), which is not.
 -- This is used in the test suite and could be useful for debugging.
 Haunt._err_blocking = false
+-- Track if user commands have been defined before.
+Haunt._has_commands = false
 
 local function is_executable(cmd) if fn.executable(cmd) > 0 then return true else return false end end
 local function warn(msg)
@@ -92,13 +94,55 @@ end
 
 -- Setup function to allow and validate user configuration.
 function Haunt.setup(config)
-    for k, v in pairs(config) do
-        if type(v) == "table" then
-            for _k, _v in pairs(v) do
-                Haunt.config[k][_k] = validate(_k, _v, k)
+    if config ~= nil then
+        for k, v in pairs(config) do
+            if type(v) == "table" then
+                for _k, _v in pairs(v) do
+                    Haunt.config[k][_k] = validate(_k, _v, k)
+                end
+            else
+                Haunt.config[k] = validate(k, v)
             end
-        else
-            Haunt.config[k] = validate(k, v)
+        end
+    end
+    if Haunt.config.define_commands then
+        command("HauntTerm", Haunt.term,
+            {
+                nargs = "*",
+                complete = "shellcmd",
+                desc = "Create or restore floating terminal, optionally setting a title or running a command"
+            })
+        command("HauntLs", Haunt.ls,
+            {
+                nargs = 0,
+                bang = true,
+                desc = "Show mapping of floating (or all, if using !) terminal titles -> buffer numbers"
+            })
+        command("HauntHelp", Haunt.help,
+            {
+                nargs = "?",
+                complete = "help",
+                desc = "Open neovim help of argument or word under cursor in floating window"
+            })
+        command("HauntMan", Haunt.man, {
+            nargs = "?",
+            bang = true,
+            complete = function(arg_lead, cmdline, cursor_pos)
+                local man = load("man")
+                if man then
+                    return man.man_complete(arg_lead, cmdline, cursor_pos)
+                end
+            end,
+            desc = "Show man page of argument (or current file if using !) or word under cursor in floating window"
+        })
+        command("HauntReset", Haunt.reset, {
+            nargs = 0,
+            desc = "Close floating window and reset internal state (attempt to recover from bugs)",
+        })
+        Haunt._has_commands = true
+    elseif Haunt._has_commands == true then
+        for _, cmd in pairs({"HauntHelp", "HauntMan", "HauntTerm", "HauntLs", "HauntReset"}) do
+            api.nvim_del_user_command(cmd)
         end
     end
     return Haunt
@@ -415,42 +459,6 @@ function Haunt.reset()
     state.win = Haunt.state.win
     state.title = Haunt.state.title
     vim.t.HauntState = state
-end
-
-if Haunt.config.define_commands then
-    command("HauntTerm", Haunt.term,
-        {
-            nargs = "*",
-            complete = "shellcmd",
-            desc = "Create or restore floating terminal, optionally setting a title or running a command"
-        })
-    command("HauntLs", Haunt.ls,
-        {
-            nargs = 0,
-            bang = true,
-            desc = "Show mapping of floating (or all, if using !) terminal titles -> buffer numbers"
-        })
-    command("HauntHelp", Haunt.help,
-        {
-            nargs = "?",
-            complete = "help",
-            desc = "Open neovim help of argument or word under cursor in floating window"
-        })
-    command("HauntMan", Haunt.man, {
-        nargs = "?",
-        bang = true,
-        complete = function(arg_lead, cmdline, cursor_pos)
-            local man = load("man")
-            if man then
-                return man.man_complete(arg_lead, cmdline, cursor_pos)
-            end
-        end,
-        desc = "Show man page of argument (or current file if using !) or word under cursor in floating window"
-    })
-    command("HauntReset", Haunt.reset, {
-        nargs = 0,
-        desc = "Close floating window and reset internal state (attempt to recover from bugs)",
-    })
 end
 
 return Haunt
