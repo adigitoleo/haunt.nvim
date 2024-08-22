@@ -15,16 +15,17 @@ local function win_is_valid(win) return api.nvim_win_is_valid(win) and win ~= wi
 local function buf_is_valid(buf) return api.nvim_buf_is_valid(buf) and buf ~= buf_invalid end
 
 Haunt.config = {
-    define_commands = true,  -- toggle to prevent definition of default user commands
-    quit_help_with_q = true, -- toggle to prevent definition of q -> :quit mapping in help buffers
+    define_commands = true,   -- toggle to prevent definition of default user commands
+    quit_help_with_q = true,  -- toggle to prevent definition of q -> :quit mapping in help buffers
+    set_term_autocmds = true, -- toggle to prevent setting autocommands for opinionated terminal setup
     window = {
-        width_frac = 0.8,    -- width of floating window as a fraction of total width
-        height_frac = 0.8,   -- height of floating window as a fraction of total height
-        winblend = 30,       -- transparency setting
-        border = "single",   -- border style, see :h floatwin-api
-        show_title = true,   -- show a title in the floating window border?
-        title_pos = "left",  -- position for the border title, see :h api-floatwin
-        zindex = 11,         -- floating window 'priority'
+        width_frac = 0.8,     -- width of floating window as a fraction of total width
+        height_frac = 0.8,    -- height of floating window as a fraction of total height
+        winblend = 30,        -- transparency setting
+        border = "single",    -- border style, see :h floatwin-api
+        show_title = true,    -- show a title in the floating window border?
+        title_pos = "left",   -- position for the border title, see :h api-floatwin
+        zindex = 11,          -- floating window 'priority'
     },
 }
 
@@ -88,7 +89,7 @@ local function validate(key, value, section)
     elseif schema[key] == nil then
         warn("unrecognized config option " .. option)
         return nil
-    elseif (key == "define_commands" or key == "quit_help_with_q") and got_type ~= "boolean" then
+    elseif (key == "define_commands" or key == "quit_help_with_q" or key == "set_term_autocmds") and got_type ~= "boolean" then
         warn(option .. " must be a boolean")
         return schema[key]
     end
@@ -229,6 +230,11 @@ local function floating(buf, win, bt, ft, title)
     if bt ~= "terminal" then -- Setting 'buftype' to "terminal" is not allowed, `draw` uses |termopen|.
         api.nvim_set_option_value("buftype", bt, { buf = buf })
         api.nvim_set_option_value("filetype", ft, { buf = buf })
+    elseif Haunt.config.set_term_autocmds then
+        api.nvim_create_autocmd(
+            { "BufWinEnter", "TermOpen" },
+            { buffer = buf, command = "startinsert|setlocal scrolloff=0|setlocal nonumber norelativenumber signcolumn=no" }
+        )
     end
     win = draw(win, buf, title)
     -- catch win=0, <https://github.com/neovim/neovim/discussions/30073#discussioncomment-10367494>
