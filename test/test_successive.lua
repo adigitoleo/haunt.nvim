@@ -227,6 +227,7 @@ T['term-other-ij']['multi'] = function(s1, s2, f1, f2, close)
     sleep(321)
     f1()
     if close then
+        tc.cmd('stopinsert')
         input(":q<Cr>")
         eq(api.nvim_win_is_valid(child.t.HauntState.win), false)
         sleep(123)
