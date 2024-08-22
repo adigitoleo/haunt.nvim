@@ -22,7 +22,7 @@ See [this link](https://adigitoleo.srht.site/haunt-nvim/haunt-nvim.mp4) for a de
 Install the plugin using your preferred plugin manager. Alternatively, NeoVim
 can load packages if they are added to your [`'packpath'`](https://neovim.io/doc/user/options.html#'packpath').
 
-To load the package without a plugin manager use the lua command `require('haunt')`.
+To load the package without a plugin manager use the lua command `require('haunt').setup()`.
 Default options are applied automatically, including floating window appearance
 and command definitions. To omit definition of user-commands, use:
 

@@ -39,16 +39,15 @@ list of current known issues that are most in need of attention.
 ==============================================================================
 USAGE								*haunt-usage*
 
-Once the plugin files are on your 'packpath', load the plugin with >
+Once the plugin files are on your 'packpath', initialise the plugin with >
 
-	:lua require('haunt')
+	:lua require('haunt').setup()
 
 in your `init.vim` file or simply >
 
-	require('haunt')
+	require('haunt').setup()
 
-in `init.lua`. Default options are applied automatically, but can be
-configured by passing a configuration table to the `setup` function, e.g. >
+in `init.lua`. Options can be configured by passing a table to `setup`, e.g. >
 
 	require('haunt').setup{ window = { show_title = false } }
 
