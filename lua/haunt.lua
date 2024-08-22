@@ -16,6 +16,7 @@ local function buf_is_valid(buf) return api.nvim_buf_is_valid(buf) and buf ~= bu
 
 Haunt.config = {
     define_commands = true, -- toggle to prevent definition of default user commands
+    single_command = false, -- toggle to define a single :Haunt command with help|man|term subcommands
     window = {
         width_frac = 0.8,   -- width of floating window as a fraction of total width
         height_frac = 0.8,  -- height of floating window as a fraction of total height
@@ -418,39 +419,62 @@ function Haunt.reset()
 end
 
 if Haunt.config.define_commands then
-    command("HauntTerm", Haunt.term,
-        {
-            nargs = "*",
-            complete = "shellcmd",
-            desc = "Create or restore floating terminal, optionally setting a title or running a command"
-        })
-    command("HauntLs", Haunt.ls,
-        {
-            nargs = 0,
-            bang = true,
-            desc = "Show mapping of floating (or all, if using !) terminal titles -> buffer numbers"
-        })
-    command("HauntHelp", Haunt.help,
-        {
-            nargs = "?",
-            complete = "help",
-            desc = "Open neovim help of argument or word under cursor in floating window"
-        })
-    command("HauntMan", Haunt.man, {
-        nargs = "?",
-        bang = true,
-        complete = function(arg_lead, cmdline, cursor_pos)
-            local man = load("man")
-            if man then
-                return man.man_complete(arg_lead, cmdline, cursor_pos)
+    if Haunt.config.single_command then
+        local function dispatch(opts)
+            local subcmd = opts.fargs[1]
+            if subcmd == "term" then
+                return Haunt.term(opts)
+            elseif subcmd == "man" then
+                return Haunt.man(opts)
+            elseif subcmd == "help" then
+                return
+                    Haunt.help(opts)
+            elseif subcmd == "ls" then
+                return Haunt.ls(opts)
             end
-        end,
-        desc = "Show man page of argument (or current file if using !) or word under cursor in floating window"
-    })
-    command("HauntReset", Haunt.reset, {
-        nargs = 0,
-        desc = "Close floating window and reset internal state (attempt to recover from bugs)",
-    })
+        end
+        command("Haunt", dispatch
+            {
+                nargs = 1,
+                complete = function() return { "term", "man", "help", "ls" } end,
+                desc = "Open a floating window with a terminal, help buffer or man page, or list previously opened terminals"
+            })
+    else
+        vim.print(vim.inspect(Haunt.config.single_command))
+        command("HauntTerm", Haunt.term,
+            {
+                nargs = "*",
+                complete = "shellcmd",
+                desc = "Create or restore floating terminal, optionally setting a title or running a command"
+            })
+        command("HauntLs", Haunt.ls,
+            {
+                nargs = 0,
+                bang = true,
+                desc = "Show mapping of floating (or all, if using !) terminal titles -> buffer numbers"
+            })
+        command("HauntHelp", Haunt.help,
+            {
+                nargs = "?",
+                complete = "help",
+                desc = "Open neovim help of argument or word under cursor in floating window"
+            })
+        command("HauntMan", Haunt.man, {
+            nargs = "?",
+            bang = true,
+            complete = function(arg_lead, cmdline, cursor_pos)
+                local man = load("man")
+                if man then
+                    return man.man_complete(arg_lead, cmdline, cursor_pos)
+                end
+            end,
+            desc = "Show man page of argument (or current file if using !) or word under cursor in floating window"
+        })
+        command("HauntReset", Haunt.reset, {
+            nargs = 0,
+            desc = "Close floating window and reset internal state (attempt to recover from bugs)",
+        })
+    end
 end
 
 return Haunt
