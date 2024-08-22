@@ -52,8 +52,6 @@ Some developer notes and tentative feature suggestions are also included in
 
 ### Examples
 
-*The following examples are formatted as successions of cmdline entries.*
-
 Open the documentation for this plugin in a floating window:
 
     :HauntHelp haunt
