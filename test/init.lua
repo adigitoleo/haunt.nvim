@@ -22,7 +22,7 @@ function TestInit()
             -- silent = true,
         },
     })
-    haunt = require('haunt')
+    haunt = require('haunt').setup()
     vim.cmd.helptags('ALL')
     haunt._err_blocking = true
 end

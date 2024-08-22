@@ -1,25 +1,23 @@
+local tc = require('test.context')
+local child = tc.child
+local sleep = vim.uv.sleep
+
 local new_set = MiniTest.new_set
 local expect = MiniTest.expect
+local eq = expect.equality
+local err = expect.error
+local ok = expect.no_error
 
-local T = new_set()
+local T = new_set({ hooks = { pre_case = tc.setup, post_once = child.stop } })
+
+local defaults = haunt.config -- get default config from parent session
 
 T['default'] = function()
-    local h = haunt.setup {}
-    expect.equality(h.config, {
-        define_commands = true,
-        window = {
-            width_frac = 0.8,
-            height_frac = 0.8,
-            winblend = 30,
-            border = "single",
-            show_title = true,
-            title_pos = "left",
-            zindex = 11,
-        }
-    })
+    tc.lua('haunt = haunt.setup {}')
+    eq(tc.lua_get('haunt.config'), defaults)
 end
 T['all-valid'] = function()
-    expect.no_error(haunt.setup, {
+    ok(haunt.setup, {
         define_commands = false,
         window = {
             width_frac = 0.7,
@@ -33,66 +31,51 @@ T['all-valid'] = function()
     })
 end
 
-local _c = haunt.config
-T['invalid-define_commands'] = function()
-    expect.error(function()
-        haunt.setup { define_commands = "foo" }
-    end, "must be a " .. type(_c.define_commands))
+T['unrecognized'] = new_set({
+    parametrize = {
+        { 'foo = false' },                 -- unrecognized option
+        { 'foo = { border = "double" }' }, -- unrecognized section
+        { 'window = { foo = "double" }' }, -- valid section but unrecognized option
+    }
+})
+T['unrecognized']['multi'] = function(s)
+    err(function() tc.lua('haunt.setup { ' .. s .. ' }') end, "unrecognized config option")
 end
-T['invalid-option'] = function()
-    expect.error(function()
-        haunt.setup { option = "foo" }
-    end, "unrecognized config option")
+
+T['invalid'] = new_set({
+    parametrize = {
+        { 'define_commands = "foo"',         type(defaults.define_commands) },
+        { 'window = { width_frac = "foo" }', type(defaults.window.width_frac) },
+        { 'window = {height_frac = "foo"}',  type(defaults.window.height_frac) },
+        { 'window = {winblend = "foo"}',     type(defaults.window.winblend) },
+        { 'window = {border = 42}',          type(defaults.window.border) },
+        { 'window = {show_title = "foo"}',   type(defaults.window.show_title) },
+        { 'window = {zindex = "foo"}',       type(defaults.window.zindex) },
+    }
+})
+T['invalid']['multi'] = function(s, t)
+    err(function() tc.lua('haunt.setup { ' .. s .. ' }') end, "must be a " .. t)
 end
-T['invalid-section'] = function()
-    expect.error(function()
-        haunt.setup { section = { option = "foo" } }
-    end, "unrecognized config option")
+
+T['invalid-title_pos'] = new_set({ parametrize = { { 42, "foo" } } })
+T['invalid-title_pos']['multi'] = function(x)
+    err(
+        function() tc.lua('haunt.setup { window = { title_pos = ' .. x .. ' } }') end,
+        "must be one of"
+    )
 end
-T['invalid-window-option'] = function()
-    expect.error(function()
-        haunt.setup { window = { option = "foo" } }
-    end, "unrecognized config option")
-end
-T['invalid-window.width_frac'] = function()
-    expect.error(function()
-        haunt.setup { window = { width_frac = "foo" } }
-    end, "must be a " .. type(_c.window.width_frac))
-end
-T['invalid-window.height_frac'] = function()
-    expect.error(function()
-        haunt.setup { window = { height_frac = "foo" } }
-    end, "must be a " .. type(_c.window.height_frac))
-end
-T['invalid-window.winblend'] = function()
-    expect.error(function()
-        haunt.setup { window = { winblend = "foo" } }
-    end, "must be a " .. type(_c.window.winblend))
-end
-T['invalid-window.border'] = function()
-    expect.error(function()
-        haunt.setup { window = { border = 42 } }
-    end, "must be a " .. type(_c.window.border))
-end
-T['invalid-window.show_title'] = function()
-    expect.error(function()
-        haunt.setup { window = { show_title = "foo" } }
-    end, "must be a " .. type(_c.window.show_title))
-end
-T['invalid-window.title_pos'] = function()
-    expect.error(function()
-        haunt.setup { window = { title_pos = 42 } }
-    end, "must be one of")
-end
-T['invalid-window.title_pos-string'] = function()
-    expect.error(function()
-        haunt.setup { window = { title_pos = "foo" } }
-    end, "must be one of")
-end
-T['invalid-window.zindex'] = function()
-    expect.error(function()
-        haunt.setup { window = { zindex = "foo" } }
-    end, "must be a " .. type(_c.window.zindex))
+
+T['no-commands'] = function()
+    tc.lua('haunt = haunt.setup { define_commands = false }')
+    err(function() tc.cmd("HauntHelp") end, "Not an editor command")
+    sleep(123)
+    err(function() tc.cmd("HauntMan") end, "Not an editor command")
+    sleep(123)
+    err(function() tc.cmd("HauntTerm") end, "Not an editor command")
+    sleep(123)
+    err(function() tc.cmd("HauntLs") end, "Not an editor command")
+    sleep(123)
+    err(function() tc.cmd("HauntReset") end, "Not an editor command")
 end
 
 return T
