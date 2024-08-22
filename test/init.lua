@@ -22,7 +22,9 @@ uv.signal_start(sigint_handle, "sigint", handle_signal)
 
 function TestInit()
     vim.opt.rtp:append('dep/mini.nvim')
-    require('mini.test').setup({
+    local ok, mini_test = pcall(require, 'mini.test')
+    if not ok then error("missing test dependency, use the provided make target to download it.") end
+    mini_test.setup({
         collect = {
             find_files = function()
                 return vim.fn.globpath('test', '**/test_*.lua', true, true)
@@ -33,7 +35,11 @@ function TestInit()
     haunt = require('haunt').setup()
     vim.cmd.helptags('ALL')
     haunt._err_blocking = true
-    io.stdout:write("Test suite setup completed for nvim instance with PID ", uv.os_getpid(), "\n")
+    vim.api.nvim_echo(
+        { { "Test suite setup completed for nvim instance with PID " }, { tostring(uv.os_getpid()) }, { "\n" } },
+        true,              -- show in :messages
+        { verbose = true } -- hide in logging mode
+    )
 end
 
 if #vim.api.nvim_list_uis() == 0 then
