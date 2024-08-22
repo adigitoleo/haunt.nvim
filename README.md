@@ -82,3 +82,22 @@ Switch between two different interactive Python sessions:
 Open the man page for `mandoc(1)` in a floating window:
 
     :HauntMan mandoc
+
+### Similar plugins
+
+- [toggleterm.nvim](https://github.com/akinsho/toggleterm.nvim) by @akinsho
+  only provides floating windows for terminals, as part of a larger terminal
+  buffer manipulation suite, and does not use sticky buffers
+- [floating-help.nvim](https://github.com/Tyler-Barham/floating-help.nvim) by @Tyler-Barham
+  doesn't have floating terminals but offers more control over the floating
+  window position and layout; it currently doesn't use sticky buffers
+- [FTerm.nvim](https://github.com/numToStr/FTerm.nvim) only offers floating windows for terminals,
+  but doesn't seem maintained anymore and doesn't respect `vim.o.shell`
+- [vim-floaterm](https://github.com/voldikss/vim-floaterm) also only offers floating terminals, and is written in
+  vimscript and therefore supports Vim as well as NeoVim; it also offers a
+  more complicated user-command which allows distinct appearance configurations
+  for different terminals, however the implementations are a bit old and there
+  are long-standing bugs that have proven tricky to resolve
+- [floating-help](https://github.com/nil70n/floating-help) by @nil70n only
+  offers floating windows for helpfiles, not man pages or terminals; the plugin
+  itself doesn't have a helpfile or tests, and doesn't use sticky buffers
