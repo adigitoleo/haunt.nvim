@@ -6,7 +6,6 @@ local sleep = vim.uv.sleep
 local new_set = MiniTest.new_set
 local expect = MiniTest.expect
 local eq = expect.equality
-local neq = expect.no_equality
 local err = expect.error
 local ok = expect.no_error
 

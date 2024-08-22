@@ -156,6 +156,7 @@ function Haunt.setup(config)
     elseif Haunt._quit_help_with_q ~= nil then
         api.nvim_del_autocmd(Haunt._quit_help_with_q)
     end
+    if fn.has('nvim-0.10') == 0 then warn("using sticky buffers requires NeoVim 0.10 or later") end
     return Haunt
 end
 
@@ -240,10 +241,7 @@ end
 
 -- Unset 'winfixbuf' to allow switching the buffer using our API.
 local function remove_fixbuf(state)
-    if fn.has('nvim-0.10') == 0 then
-        warn("using sticky buffers requires NeoVim 0.10 or later")
-        return state
-    end
+    if fn.has('nvim-0.10') == 0 then return state end
     if win_is_valid(state.win) then
         if api.nvim_get_option_value("winfixbuf", { win = state.win }) then
             api.nvim_set_option_value("winfixbuf", false, { win = state.win })
@@ -267,7 +265,7 @@ end
 
 -- Set tab-local state to a copy of the provided state.
 local function set_state(state)
-    if buf_is_valid(state.buf) and win_is_valid(state.win) and fn.has('nvim-0.10') == 0 then
+    if buf_is_valid(state.buf) and win_is_valid(state.win) and fn.has('nvim-0.10') == 1 then
         api.nvim_set_option_value("winfixbuf", true, { win = fn.win_getid(state.win) })
         add_resized_hook(state.buf)
     end
