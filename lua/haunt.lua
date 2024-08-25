@@ -4,14 +4,18 @@ local sleep = vim.uv.sleep
 local command = api.nvim_create_user_command
 local Haunt = {}
 
+local buf_invalid = 0 -- Error code from nvim_create_buf()
+local win_invalid = 0 -- Error code from nvim_open_win()
+local job_invalid = 0 -- One of the error codes from termopen(), the other is -1
+
 -- Values of 0 for buffer/window ID are ambiguously used in the api
 -- to indicate either an error or as an alias for the "current" buffer/window,
 -- or sometimes even for the "alternate" buffer, e.g. :h bufname().
 -- Here, we define some wrappers to remove the aliasing.
-local buf_invalid = 0 -- Error code from nvim_create_buf()
-local win_invalid = 0 -- Error code from nvim_open_win()
-local job_invalid = 0 -- One of the error codes from termopen(), the other is -1
+
+---@param win integer window ID, see |window-ID|
 local function win_is_valid(win) return api.nvim_win_is_valid(win) and win ~= win_invalid end
+---@param buf integer buffer number, as returned by |bufnr()|
 local function buf_is_valid(buf) return api.nvim_buf_is_valid(buf) and buf ~= buf_invalid end
 
 Haunt.config = {
@@ -33,7 +37,7 @@ Haunt.state = {        -- Local to a tabpage
     buf = buf_invalid, -- ID of the buffer currently displayed in the floating window
     win = win_invalid, -- ID of the floating window
     title = "",        -- Most recent title of the floating window
-    termbufs = {},     -- maps known terminal 'titles' to their buffer IDs
+    termbufs = {},     -- Map of known terminal 'titles' and their buffer IDs
 }
 
 -- Use error(), which is blocking, instead of nvim_err_writeln(), which is not.
@@ -44,14 +48,16 @@ Haunt._has_commands = false
 -- Store ID for quit_help_with_q autocommand.
 Haunt._quit_help_with_q = nil
 
+---@param cmd string
 local function is_executable(cmd) if fn.executable(cmd) > 0 then return true else return false end end
-local function warn(msg)
+local function warn(msg) ---@param msg string
     local erf = api.nvim_err_writeln
     if Haunt._err_blocking then erf = error end
     erf("[haunt.nvim]: " .. msg)
 end
 
-local function load(plugin) -- Load either local or third-party plugin.
+-- Load either local or third-party plugin.
+local function load(plugin) ---@param plugin string
     local has_plugin, out = pcall(require, plugin)
     if has_plugin then
         return out
@@ -62,6 +68,8 @@ local function load(plugin) -- Load either local or third-party plugin.
 end
 
 -- Validate custom user config, fall back to Haunt.config defaults.
+---@param key string
+---@param section string|nil
 local function validate(key, value, section)
     local schema = Haunt.config
     local got_type = type(value)
@@ -97,6 +105,7 @@ local function validate(key, value, section)
 end
 
 -- Setup function to allow and validate user configuration.
+---@param config table
 function Haunt.setup(config)
     if config ~= nil then
         for k, v in pairs(config) do
@@ -162,7 +171,7 @@ function Haunt.setup(config)
 end
 
 -- Get a copy of the tab-local vim.t.HauntState if not nil, or Haunt.state otherwise.
-local function get_state()
+local function get_state() ---@return table
     local state = {}
     if vim.t.HauntState == nil then
         state = vim.deepcopy(Haunt.state)
@@ -174,7 +183,10 @@ local function get_state()
 end
 
 -- (Re)draw the floating window. Not allowed when |textlock| is active.
-local function draw(win, buf, title)
+---@param win integer ID of possibly existing window
+---@param buf integer number of possibly existing buffer
+---@param title string|nil optional title to use for terminal buffer reference
+local function draw(win, buf, title) ---@return integer
     local wc = vim.o.columns
     local wl = vim.o.lines
     local width = math.ceil(wc * Haunt.config.window.width_frac)
@@ -208,13 +220,12 @@ local function draw(win, buf, title)
 end
 
 -- Open or focus floating window and set {buf|file}type. Not allowed when |textlock| is active.
+---@param buf integer number of possibly existing buffer
+---@param win integer ID of possibly existing window
+---@param bt string desired |'buftype'|
+---@param ft string desired |'filetype'|
+---@param title string|nil optional title to be displayed in the window border
 local function floating(buf, win, bt, ft, title)
-    -- buf: possibly existing buffer
-    -- win: possibly existing window
-    -- bt: desired buftype
-    -- ft: desired filetype
-    -- title: title to be displayed in the window border
-
     -- New buffer if old one is gone, or we're switching from a terminal (cannot set 'buftype')
     -- New buffer any time that we are making a help or man buffer.
     if (
@@ -246,7 +257,7 @@ local function floating(buf, win, bt, ft, title)
 end
 
 -- Unset 'winfixbuf' to allow switching the buffer using our API.
-local function remove_fixbuf(state)
+local function remove_fixbuf(state) ---@param state table
     if fn.has('nvim-0.10') == 0 then return state end
     if win_is_valid(state.win) then
         if api.nvim_get_option_value("winfixbuf", { win = state.win }) then
@@ -257,7 +268,7 @@ local function remove_fixbuf(state)
 end
 
 -- Make floating window respond to VimResized events.
-local function add_resized_hook(buf)
+local function add_resized_hook(buf) ---@param buf integer
     api.nvim_create_autocmd({ "VimResized" },
         {
             buffer = buf,
@@ -270,7 +281,7 @@ local function add_resized_hook(buf)
 end
 
 -- Set tab-local state to a copy of the provided state.
-local function set_state(state)
+local function set_state(state) ---@param state table
     if buf_is_valid(state.buf) and win_is_valid(state.win) and fn.has('nvim-0.10') == 1 then
         api.nvim_set_option_value("winfixbuf", true, { win = fn.win_getid(state.win) })
         add_resized_hook(state.buf)
@@ -279,18 +290,22 @@ local function set_state(state)
 end
 
 -- Throw a warning/error with the message `msg` and set tab-local state to `state`.
+---@param msg string
+---@param state table
 local function termfail(msg, state)
     warn(msg)
     set_state(state)
 end
 
 -- Determine if buffer (given by its number) is a terminal.
-local function is_terminal_buf(maybe_buf_number)
+---@param maybe_buf_number integer
+local function is_terminal_buf(maybe_buf_number) ---@return boolean success, any result, any ... see pcall()
     return pcall(function() api.nvim_buf_get_var(maybe_buf_number, "term_title") end)
 end
 
 -- Implementation for :HauntTerm.
-function Haunt.term(opts)
+---@param opts table See |lua-guide-commands-create|
+function Haunt.term(opts) ---@return integer|nil
     local state = remove_fixbuf(get_state())
     local title = nil
     local cmd = { vim.o.shell }
@@ -375,7 +390,9 @@ function Haunt.term(opts)
     return job_id
 end
 
--- Implementation for :HauntLs[!].
+-- Implementation for :HauntLs\[!\].
+---@param opts table See |lua-guide-commands-create|
+---@param silent boolean toggle use of vim.print() of return value
 function Haunt.ls(opts, silent)
     local terminals = {}
     if (opts and opts.bang) then
@@ -402,6 +419,7 @@ function Haunt.ls(opts, silent)
 end
 
 -- Implementation for :HauntHelp.
+---@param opts table See |lua-guide-commands-create|
 function Haunt.help(opts)
     local state = remove_fixbuf(get_state())
     local arg = fn.expand("<cword>")
@@ -425,7 +443,8 @@ function Haunt.help(opts)
     set_state(state)
 end
 
--- Implementation for :HauntMan[!].
+-- Implementation for :HauntMan\[!\].
+---@param opts table See |lua-guide-commands-create|
 function Haunt.man(opts)
     local state = remove_fixbuf(get_state())
     local arg = fn.expand("<cword>")
