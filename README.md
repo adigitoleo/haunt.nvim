@@ -36,7 +36,8 @@ Available commands and options are described in `:help haunt`
 New versions are generally developed on the `dev` branch.
 Please send patches/queries to my [public inbox](https://lists.sr.ht/~adigitoleo/public-inbox).
 Current issues and pending feature requests are listed on [my nvim-plugins tracker](https://todo.sr.ht/~adigitoleo/nvim-plugins?search=%5Bhaunt.nvim%5D).
-The source code includes a test suite which can be run using `make test`.
+Developers should download the [just](https://github.com/casey/just) command runner.
+The source code includes a test suite which can be run using `just test`.
 Running the test suite for the first time requires an internet connection,
 because test suite dependencies need to be downloaded.
 The test suite can also be run interactively by opening NeoVim with
