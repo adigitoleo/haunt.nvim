@@ -5,9 +5,10 @@ packages:
   - neovim
   - ripgrep
   - fzf
+  - just
 sources:
   - https://git.sr.ht/~adigitoleo/haunt.nvim
 tasks:
   - test: |
       cd haunt.nvim
-      make test
+      just test
