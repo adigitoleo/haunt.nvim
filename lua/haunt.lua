@@ -1,6 +1,6 @@
 local api = vim.api
 local fn = vim.fn
-local sleep = vim.uv.sleep
+local sleep = (vim.uv or vim.loop).sleep
 local command = api.nvim_create_user_command
 local Haunt = {}
 
