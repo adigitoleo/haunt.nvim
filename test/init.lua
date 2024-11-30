@@ -23,7 +23,11 @@ uv.signal_start(sigint_handle, "sigint", handle_signal)
 function TestInit()
     vim.opt.rtp:append('dep/mini.nvim')
     local ok, mini_test = pcall(require, 'mini.test')
-    if not ok then error("missing test dependency, use the provided make target to download it.") end
+    if not ok then
+        error(
+            "missing test dependency; run `just test` and check that the 'mini.test' submodule is correctly initialised."
+        )
+    end
     mini_test.setup({
         collect = {
             find_files = function()
