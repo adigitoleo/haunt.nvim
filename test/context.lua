@@ -25,8 +25,8 @@ function Context.get()
     return child.api.nvim_buf_get_lines(0, 0, -1, true)
 end
 
-function Context.setopt(name)
-    return child.api.nvim_set_option_value(name, { scope = "local" })
+function Context.setopt(name, value)
+    return child.api.nvim_set_option_value(name, value, { scope = "local" })
 end
 
 function Context.getopt(name)
