@@ -6,6 +6,7 @@ packages:
   - ripgrep
   - fzf
   - just
+  - python
 sources:
   - https://git.sr.ht/~adigitoleo/haunt.nvim
 tasks:

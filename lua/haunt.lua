@@ -367,7 +367,7 @@ function Haunt.term(opts) ---@return integer|nil
     if create_new then
         job_id = fn.termopen(cmd, {
             on_exit = function()
-                Haunt.ls({}, true)
+                Haunt.ls({}, true) -- To clean up the dead reference.
                 if cmd[1] == vim.o.shell then
                     api.nvim_input("<Cr>")
                 end
@@ -476,6 +476,49 @@ function Haunt.man(opts)
 
     state.title = "man"
     set_state(state)
+end
+
+-- Send buffer (lines) to a running terminal.
+---@param id integer See |job-id|
+function Haunt.send(id) ---@return integer|nil
+    if vim.o.filetype == "markdown" then
+        -- TODO: Trap error from the next line and re-raise using our warn()?
+        vim.treesitter.language.add('markdown') -- Throws if markdown parser is not available.
+        local parser = vim.treesitter.get_parser()
+        -- Only parse visible lines to avoid negative performance impact.
+        local tree = parser:parse({ 0, 0, vim.o.lines, vim.o.columns })[1]
+        local root = tree:root()
+        local cursor_row, _ = unpack(api.nvim_win_get_cursor(0))
+        local thisblock = nil
+
+        -- Recursively traverse 'section' type children of the root 'document' element in the tree.
+        local function find_fenced_code(node)
+            for i = 0, node:named_child_count() - 1 do
+                local child = node:named_child(i)
+                -- Extract 'fenced_code_block' children from the sections.
+                if child:type() == "fenced_code_block" then
+                    vim.print("in block")
+                    local start_row, _, end_row, _ = child:range()
+                    if cursor_row - 1 >= start_row and cursor_row - 1 <= end_row then
+                        thisblock = child
+                    end
+                elseif child:type() == "section" then
+                    find_fenced_code(child)
+                end
+            end
+        end
+
+        find_fenced_code(root)
+        if thisblock ~= nil then
+            local start_row, _, end_row, _ = thisblock:range()
+            api.nvim_chan_send(id, table.concat(api.nvim_buf_get_lines(0, start_row + 1, end_row - 1, false), '\n'))
+        else
+            warn("cursor is not in a code block")
+        end
+    else
+        api.nvim_chan_send(id, table.concat(api.nvim_buf_get_lines(0, 0, -1, false), '\n'))
+    end
+    api.nvim_chan_send(id, '\r')
 end
 
 -- Close floating window and reset tab-local state to defaults, except for the termbufs table.
