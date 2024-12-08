@@ -12,11 +12,12 @@ local err = expect.error
 local ok = expect.no_error
 
 local T = new_set({ hooks = { pre_case = tc.setup, post_once = child.stop } })
+local mock_md = { "# H1", "", "Text, not code", "", "### H3", "", "```", "x = 1", "y = 2", "print(x + y)", "```" }
 
 T['send-whole'] = new_set {
     parametrize = {
         -- Test fenced python code block embedded in a markdown buffer.
-        { "markdown", "python", { "# H1", "", "Text, not code", "", "### H3", "", "```", "x = 1", "y = 2", "print(x + y)", "```" } },
+        { "markdown", "python", mock_md },
         -- Test lua code.
         { "lua",      "lua",    { "function foo()", "local x = 1", "local y = 2", "print(x + y)", "end", "foo()" } }
     }
@@ -37,7 +38,21 @@ T['send-whole']['multi'] = function(ft, exe, lines)
     sleep(321)                         -- Wait for floating terminal to open.
     tc.cmd('stopinsert')
     -- Check last non-empty line (empty lines may include interpreter prompts).
-    eq(vim.iter(vim.tbl_filter(function(str) return str ~= "" and str ~= ">>> " and str ~= "> " end, tc.get())):last(), '3')
+    eq(vim.iter(vim.tbl_filter(function(str) return str ~= "" and str ~= ">>> " and str ~= "> " end, tc.get())):last(),
+        '3')
+end
+
+T['send-whole-md-err'] = function()
+    tc.setopt("filetype", "markdown")
+    tc.put(mock_md)
+    sleep(123) -- Wait for lines to fill buffer.
+    input('3j')
+    local id = tc.lua_get('haunt.term({ fargs = { "python" } })')
+    sleep(3210) -- Wait for floating terminal to open.
+    tc.cmd('stopinsert')
+    tc.cmd('quit')
+    sleep(123)
+    err(function() tc.lua('haunt.send(' .. id .. ')') end, "cursor is not in a code block")
 end
 
 return T
