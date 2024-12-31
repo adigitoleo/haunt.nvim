@@ -478,9 +478,9 @@ function Haunt.man(opts)
     set_state(state)
 end
 
--- Send buffer (lines) to a running terminal.
+-- Send whole buffer or fenced code block to a running terminal.
 ---@param id integer See |job-id|
-function Haunt.send(id) ---@return integer|nil
+local function send_whole(id)
     if vim.o.filetype == "markdown" then
         -- TODO: Trap error from the next line and re-raise using our warn()?
         vim.treesitter.language.add('markdown') -- Throws if markdown parser is not available.
@@ -511,12 +511,25 @@ function Haunt.send(id) ---@return integer|nil
         find_fenced_code(root)
         if thisblock ~= nil then
             local start_row, _, end_row, _ = thisblock:range()
-            api.nvim_chan_send(id, table.concat(api.nvim_buf_get_lines(0, start_row + 1, end_row - 1, false), '\n'))
+            api.nvim_chan_send(id, table.concat(api.nvim_buf_get_lines(0, start_row + 1, end_row - 1, true), '\n'))
         else
             warn("cursor is not in a code block")
         end
     else
         api.nvim_chan_send(id, table.concat(api.nvim_buf_get_lines(0, 0, -1, false), '\n'))
+    end
+end
+
+-- Send buffer (lines) to a running terminal.
+---@param id integer See |job-id|
+function Haunt.send(id)
+    local mode = api.nvim_get_mode().mode
+    if mode == 'n' then
+        send_whole(id)
+    elseif mode == 'V' then
+        local start_line = fn.line("v")
+        local end_line = fn.line(".")
+        api.nvim_chan_send(id, table.concat(api.nvim_buf_get_lines(0, start_line - 1, end_line, true), '\n'))
     end
     api.nvim_chan_send(id, '\r')
 end
