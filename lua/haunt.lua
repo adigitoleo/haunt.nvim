@@ -297,6 +297,9 @@ local function termfail(msg, state)
     set_state(state)
 end
 
+---@param opts table See |lua-guide-commands-create|
+local function has_args(opts) return (opts and opts.fargs and vim.tbl_count(opts.fargs) > 0) end
+
 -- Determine if buffer (given by its number) is a terminal.
 ---@param maybe_buf_number integer
 local function is_terminal_buf(maybe_buf_number) ---@return boolean success, any result, any ... see pcall()
@@ -327,7 +330,7 @@ function Haunt.term(opts) ---@return integer|nil
     end
 
     -- Support for opening existing (non-floating) terminal buffers.
-    if (opts and opts.fargs and vim.tbl_count(opts.fargs) > 0) then cmd = opts.fargs end
+    if has_args(opts) then cmd = opts.fargs end
     local maybe_buf_number = tonumber(cmd[1], 10) -- Allow opening existing terminal buffers by buffer number.
     if maybe_buf_number ~= nil then
         if title == nil then
@@ -423,7 +426,7 @@ end
 function Haunt.help(opts)
     local state = remove_fixbuf(get_state())
     local arg = fn.expand("<cword>")
-    if (opts and opts.fargs and vim.tbl_count(opts.fargs) > 0) then arg = opts.fargs[1] end
+    if has_args(opts) then arg = opts.fargs[1] end
     state.buf, state.win = floating(state.buf, state.win, "help", "help", "help")
     sleep(100) -- Wait for floating window to open.
     local cmdparts = {}
@@ -448,9 +451,7 @@ end
 function Haunt.man(opts)
     local state = remove_fixbuf(get_state())
     local arg = fn.expand("<cword>")
-    if (opts and opts.fargs and vim.tbl_count(opts.fargs) > 0) then
-        arg = fn.join(opts.fargs, ' ')
-    end
+    if has_args(opts) then arg = fn.join(opts.fargs, ' ') end
     if string.len(arg) < 1 or arg == '""' or arg == "'\"\"'" then
         warn(":Man requires an argument")
         return
