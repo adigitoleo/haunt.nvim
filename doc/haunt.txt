@@ -204,6 +204,9 @@ same buffer.
 
 The variant `:HauntLs!` will instead list |b:term_title|s of all terminal buffers.
 
+The |:verbose| modifier is supported and will change the output to include the
+|job-id| of each listed terminal buffer.
+
 ------------------------------------------------------------------------------
 								*:HauntReset*
 
