@@ -9,6 +9,8 @@ This [NeoVim](https://neovim.io) plugin, written in Lua, offers alternative
 commands to open embedded terminals, man pages and help buffers in floating
 windows. Existing terminal buffers can also be opened in the floating window.
 Commands like `:bnext`, `:bprevious`, `:b#` etc. are suppressed in this window.
+Buffer contents, selected lines, and fenced code blocks in markdown buffers
+can be sent to a terminal job, all using a single key sequence.
 **This plugin is currently tested on latest NeoVim on Arch Linux.**
 Check [this link](https://archlinux.org/packages/extra/x86_64/neovim/) to
 discover the recommended NeoVim version.
@@ -28,7 +30,7 @@ and command definitions. To omit definition of user-commands, use:
 
     require('haunt').setup { define_commands = false }
 
-Available commands and options are described in `:help haunt`
+Available commands, mappings and options are described in `:help haunt`
 (or `:HauntHelp haunt` if you allowed default command definitions).
 
 ## Contributing

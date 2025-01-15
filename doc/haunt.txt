@@ -53,6 +53,16 @@ in `init.lua`. Options can be configured by passing a table to `setup`, e.g. >
 
 Configuration options are described in |haunt-config|.
 
+------------------------------------------------------------------------------
+							*haunt-mappings*
+
+Only |<Plug>| mappings are provided by default. It is recommended to map these
+to a comfortable key sequence using e.g. |vim.keymap.set()|. The following
+targets are provided, and their descriptions can be queried with the |:map|
+command, e.g. `:map <Plug>(haunt-send)`.
+
+	<Plug>(haunt-send)
+
 
 ==============================================================================
 CONFIGURATION					*haunt-config* *haunt.setup*
