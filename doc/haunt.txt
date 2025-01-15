@@ -149,6 +149,9 @@ be executed when |textlock| is active (i.e. you may need to use
 			second argument is a boolean that can be used to turn
 			off the |vim.print()| output (only useful when
 			collecting the return value)
+	`send(id)`	send whole buffer, selected lines, or fenced code
+			block (markdown files) to a running terminal with
+			the given |job-id|
 	`reset()`	close floating window and reset tab-local state to
 			defaults (except the `termbuf` listing, which is
 			preserved to facilitate terminal buffer recovery)
