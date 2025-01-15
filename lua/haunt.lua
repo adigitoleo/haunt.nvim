@@ -520,13 +520,15 @@ local function send_whole(id)
     end
 end
 
--- Send buffer (lines) to a running terminal.
+-- Send buffer/lines or fenced code block (markdown files) to a running terminal.
 ---@param id integer See |job-id|
 function Haunt.send(id)
     local mode = api.nvim_get_mode().mode
     if mode == 'n' then
         send_whole(id)
     elseif mode == 'V' then
+        -- NOTE: Don't use '< and '> marks, because they are not set until the visual selection is terminated
+        -- (and even in that case, I have found them to be unreliable).
         local start_line = fn.line("v")
         local end_line = fn.line(".")
         api.nvim_chan_send(id, table.concat(api.nvim_buf_get_lines(0, start_line - 1, end_line, true), '\n'))
