@@ -39,6 +39,7 @@ Haunt.state = {        -- Local to a tabpage
     win = win_invalid, -- ID of the floating window
     title = "",        -- Most recent title of the floating window
     termbufs = {},     -- Map of known terminal 'titles' and their buffer IDs
+    channel = 0        -- Most recent |channel-id| used for Haunt.send
 }
 
 -- Use error(), which is blocking, instead of nvim_err_writeln(), which is not.
@@ -119,9 +120,13 @@ function Haunt.setup(config)
             end
         end
     end
-    bindkey("n", "<Plug>(haunt-send)", function() require('haunt').send(vim.v.count) end,
+    bindkey("n", "<Plug>(haunt-send)", function()
+            local id = vim.v.count
+            if id == 0 and vim.t.HauntState ~= nil then id = vim.t.HauntState.channel end
+            require('haunt').send(id)
+        end,
         {
-            desc = "Send buffer or selected lines or fenced code block (markdown files) to terminal job given by v:count"
+            desc = "Send buffer/selected lines/fenced code block to job given by v:count or t:HauntState.channel"
         })
     if Haunt.config.define_commands then
         command("HauntTerm", Haunt.term,
@@ -488,7 +493,7 @@ function Haunt.man(opts)
 end
 
 -- Send whole buffer or fenced code block to a running terminal.
----@param id integer See |job-id|
+---@param id integer See |job-id|, optional (use vim.t.HauntState.channel otherwise)
 local function send_whole(id)
     if vim.o.filetype == "markdown" then
         -- TODO: Trap error from the next line and re-raise using our warn()?
@@ -531,7 +536,13 @@ end
 -- Send buffer/lines or fenced code block (markdown files) to a running terminal.
 ---@param id integer See |job-id|
 function Haunt.send(id)
-    if id == 0 then -- TODO: Verify that the parent nvim process always has a job-id of 0.
+    local state = get_state()
+    if id == nil then
+        id = state.channel
+    elseif id ~= 0 then    -- Channel 0 is the parent nvim instance.
+        state.channel = id -- Update channel-id AKA job-id cache.
+        vim.t.HauntState = vim.deepcopy(state)
+    else
         warn("cannot send data to channel 0")
         return
     end
