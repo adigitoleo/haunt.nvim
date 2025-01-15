@@ -527,6 +527,10 @@ end
 -- Send buffer/lines or fenced code block (markdown files) to a running terminal.
 ---@param id integer See |job-id|
 function Haunt.send(id)
+    if id == 0 then -- TODO: Verify that the parent nvim process always has a job-id of 0.
+        warn("cannot send data to channel 0")
+        return
+    end
     local mode = api.nvim_get_mode().mode
     if mode == 'n' then
         send_whole(id)
