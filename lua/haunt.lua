@@ -506,7 +506,6 @@ local function send_whole(id)
                 local child = node:named_child(i)
                 -- Extract 'fenced_code_block' children from the sections.
                 if child:type() == "fenced_code_block" then
-                    vim.print("in block")
                     local start_row, _, end_row, _ = child:range()
                     if cursor_row - 1 >= start_row and cursor_row - 1 <= end_row then
                         thisblock = child
