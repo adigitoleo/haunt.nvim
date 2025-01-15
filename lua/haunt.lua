@@ -2,6 +2,7 @@ local api = vim.api
 local fn = vim.fn
 local sleep = (vim.uv or vim.loop).sleep
 local command = api.nvim_create_user_command
+local bindkey = vim.keymap.set
 local Haunt = {}
 
 local buf_invalid = 0 -- Error code from nvim_create_buf()
@@ -118,6 +119,10 @@ function Haunt.setup(config)
             end
         end
     end
+    bindkey("n", "<Plug>(haunt-send)", function() require('haunt').send(vim.v.count) end,
+        {
+            desc = "Send buffer or selected lines or fenced code block (markdown files) to terminal job given by v:count"
+        })
     if Haunt.config.define_commands then
         command("HauntTerm", Haunt.term,
             {
