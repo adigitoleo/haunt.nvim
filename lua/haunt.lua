@@ -421,7 +421,7 @@ function Haunt.ls(opts, silent)
         vim.t.HauntState.termbufs = terminals -- Take the opportunity to clean up dead buffer refs.
     end
     if (opts and opts.smods and opts.smods.verbose > 0) then
-        for k, v in pairs(terminals) do terminals[k] = { v, vim.bo[v].channel } end
+        for k, v in pairs(terminals) do terminals[k] = { bufnr = v, job = vim.bo[v].channel } end
     end
     if silent == nil or not silent then
         vim.print(vim.inspect(terminals))
