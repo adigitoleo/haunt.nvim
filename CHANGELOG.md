@@ -5,6 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.2] — 2025-01-19
+
+### Fixed
+- Missing entries in `:HauntLs!`/`require('haunt').ls({ bang = true })` output
+  due to incorrect reliance on non-unique `b:term_title` to identify terminal
+  buffers
+
+### Added
+- `<Plug>(haunt-send)` mapping target to facilitate sending whole buffers,
+  selected lines, or the fenced code block surrounding the cursor (for markdown
+  buffers) to a running interpreter with `job-id` matching either `v:count` or
+  the cached `t:HauntState.channel` value
+- `:verbose` command modifier support for `:HauntLs[!]`, providing a tabular
+  output that includes the `job-id` and `b:term_title` for each listed terminal
+  buffer
+
+### Changed
+- `:HauntLs!`/`require('haunt').ls({ bang = true })` output now looks identical
+  to the non-bang variant for all floating terminals, and non-floating
+  terminals are listed using their `job-id` instead of relying on the
+  non-unique `b:term_title`
+
 ## [2.2.1] — 2024-09-26
 
 ### Fixed
@@ -101,6 +123,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.1.0] — 2024-04-29
 
+[2.2.2]: https://git.sr.ht/~adigitoleo/haunt.nvim/refs/v2.2.2
 [2.2.1]: https://git.sr.ht/~adigitoleo/haunt.nvim/refs/v2.2.1
 [2.2.0]: https://git.sr.ht/~adigitoleo/haunt.nvim/refs/v2.2.0
 [2.1.0]: https://git.sr.ht/~adigitoleo/haunt.nvim/refs/v2.1.0
