@@ -64,7 +64,7 @@ T['term-api-nargs0'] = function()
     neq(child.t.HauntState.win, -1)
     eq(#vim.tbl_keys(child.t.HauntState.termbufs), 1)
     eq(tc.getopt("buftype"), "terminal")
-    neq(child.b.term_title, nil)
+    neq(child.bo.channel, nil)
 end
 
 T['term-api'] = new_set({
@@ -86,7 +86,7 @@ T['term-api']['multi'] = function(fargs, title)
     neq(child.t.HauntState.buf, -1)
     neq(child.t.HauntState.win, -1)
     eq(tc.getopt("buftype"), "terminal")
-    neq(child.b.term_title, nil)
+    neq(child.bo.channel, nil)
     eq(vim.tbl_keys(child.t.HauntState.termbufs)[1], title)
 end
 

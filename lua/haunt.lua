@@ -313,7 +313,11 @@ local function has_args(opts) return (opts and opts.fargs and vim.tbl_count(opts
 -- Determine if buffer (given by its number) is a terminal.
 ---@param maybe_buf_number integer
 local function is_terminal_buf(maybe_buf_number) ---@return boolean success, any result, any ... see pcall()
-    return pcall(function() api.nvim_buf_get_var(maybe_buf_number, "term_title") end)
+    if maybe_buf_number ~= nil and buf_is_valid(maybe_buf_number) then
+        return fn.getbufvar(maybe_buf_number, "&buftype") == "terminal"
+    else
+        return false
+    end
 end
 
 -- Implementation for :HauntTerm.
