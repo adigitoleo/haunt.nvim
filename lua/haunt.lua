@@ -412,16 +412,7 @@ end
 ---@param silent boolean toggle use of vim.print() of return value
 function Haunt.ls(opts, silent)
     local terminals = {}
-    if (opts and opts.bang) then
-        vim.tbl_map(function(v) terminals[api.nvim_buf_get_var(v, "term_title")] = v end,
-            vim.tbl_filter(
-                function(v)
-                    if fn.getbufvar(v, "&buftype") == "terminal" then return v end
-                    return false
-                end, api.nvim_list_bufs()
-            )
-        )
-    elseif vim.t.HauntState ~= nil then
+    if vim.t.HauntState ~= nil then
         for k, v in pairs(vim.t.HauntState.termbufs) do
             if buf_is_valid(v) then
                 terminals[k] = v
@@ -429,8 +420,29 @@ function Haunt.ls(opts, silent)
         end
         vim.t.HauntState.termbufs = terminals -- Take the opportunity to clean up dead buffer refs.
     end
+    if (opts and opts.bang) then              -- Use of ! means that non-floating terminals, identified by job-id, are included.
+        vim.tbl_map(function(v) terminals[tostring(vim.bo[v].channel)] = v end,
+            vim.tbl_filter(
+                function(v)
+                    if
+                        fn.getbufvar(v, "&buftype") == "terminal"
+                        and (vim.t.HauntState ~= nil and not vim.tbl_contains(vim.t.HauntState.termbufs, v))
+                    then
+                        return v
+                    end
+                    return false
+                end, api.nvim_list_bufs()
+            )
+        )
+    end
     if (opts and opts.smods and opts.smods.verbose > 0) then
-        for k, v in pairs(terminals) do terminals[k] = { bufnr = v, job = vim.bo[v].channel } end
+        for k, v in pairs(terminals) do
+            terminals[k] = {
+                bufnr = v,
+                job = vim.bo[v].channel,
+                term_title = api.nvim_buf_get_var(v, "term_title") -- NOTE: b:term_title is non-unique.
+            }
+        end
     end
     if silent == nil or not silent then
         vim.print(vim.inspect(terminals))

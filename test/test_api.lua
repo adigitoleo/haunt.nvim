@@ -142,6 +142,40 @@ end
 
 -- These call vim.print and so must be wrapped with :silent (errors will still propagate)
 T['ls-api'] = function() tc.cmd [[silent lua haunt.ls()]] end
+T['ls-api-silent'] = function() tc.cmd [[lua haunt.ls({}, true)]] end
 T['ls-api-bang'] = function() tc.cmd [[silent lua haunt.ls({ bang = true })]] end
+
+T['ls-api-return'] = new_set({
+    parametrize = {
+        { -- Should list one terminal.
+            function() return vim.tbl_count(tc.lua_get('haunt.ls({}, true)')) end,
+            1
+        },
+        { -- Should list two terminals.
+            function() return vim.tbl_count(tc.lua_get('haunt.ls({ bang = true }, true)')) end,
+            2
+        },
+    }
+})
+T['ls-api-return']['multi'] = function(f, ok_count)
+    tc.cmd [[terminal]]
+    sleep(321)
+    tc.lua('haunt.term({ fargs = {"-t", "t2"} } )')
+    sleep(321)
+    eq(f(), ok_count)
+end
+
+T['ls-api-verbose'] = function()
+    tc.lua('haunt.term()')
+    sleep(321)
+    tc.lua('haunt.term({ fargs = {"-t", "t2"} })')
+    sleep(321)
+    local terminals = tc.lua_get('haunt.ls({ smods = { verbose = 1 } }, true)')
+    for _, v in pairs(terminals) do
+        neq(v.bufnr, nil)
+        neq(v.job, nil)
+        neq(v.term_title, nil)
+    end
+end
 
 return T
