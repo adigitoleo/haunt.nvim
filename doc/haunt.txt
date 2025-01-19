@@ -154,11 +154,13 @@ be executed when |textlock| is active (i.e. you may need to use
 			to `haunt_term` (if `opts.fargs` is omitted, |<cword>|
 			will be used instead)`
 	`ls({*opts}[,s])` show the current mapping of floating terminal titles
-			to buffer numbers; with `opts.bang = true` all
-			|b:term_title|s are listed instead; the optional
-			second argument is a boolean that can be used to turn
-			off the |vim.print()| output (only useful when
-			collecting the return value)
+			to buffer numbers; with `opts.bang = true` all other
+			terminals, identified by their |job-id|s, are also
+			listed; with `opts.smods.verbose` > 0 the return value
+			becomes a table which includes (non-unique)
+			|b:term_title|s; the optional second argument is a
+			boolean that can be used to turn off the |vim.print()|
+			output (only useful when collecting the return value)
 	`send([id])`	send whole buffer, selected lines, or fenced code
 			block (markdown files) to a running terminal with
 			a given |job-id| (or t:HauntState.channel by default)
@@ -212,10 +214,11 @@ mapping may be many-to-one if the title for a floating terminal was updated.
 In this case, using either title with `:HauntTerm -t <title>` will restore the
 same buffer.
 
-The variant `:HauntLs!` will instead list |b:term_title|s of all terminal buffers.
+The variant `:HauntLs!` will include a mapping of |job-id|s to buffer
+numbers for all other (non-floating) terminal buffers.
 
-The |:verbose| modifier is supported and will change the output to include the
-|job-id| of each listed terminal buffer.
+The |:verbose| modifier is supported and will change the output to a table that
+includes the (non-unique) |b:term_title| of each listed terminal buffer.
 
 ------------------------------------------------------------------------------
 								*:HauntReset*
